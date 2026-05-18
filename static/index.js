@@ -255,8 +255,8 @@ function buildCourseCatalogue(program_state) {
     hdr.className = 'option-header';
     hdr.dataset.id = "tronc";
     hdr.innerHTML = `
-        <div class="section-title">Tronc commun</div>
-        <div class="section-chevron">▼</div>`;
+        <div class="section-chevron">▼</div>
+        <div class="section-title">Tronc commun</div>`;
     hdr.addEventListener('click', () => el.classList.toggle('collapsed'));
     el.appendChild(hdr);
 
