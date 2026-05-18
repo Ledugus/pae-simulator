@@ -369,9 +369,7 @@ function renderCourseList(container, courses, color) {
                 ${c.semester ? `<span class="badge badge-q">${c.semester}</span>` : ''}
             </div>`;
 
-        if (!isMandatory) {
-            row.addEventListener('click', () => toggleCourse(c.code));
-        }
+        row.addEventListener('click', () => toggleCourse(c.code));
         row.addEventListener('mouseenter', e => showTooltip(e, courseData));
         row.addEventListener('mouseleave', hideTooltip);
 
@@ -617,10 +615,26 @@ function toggleCourse(code) {
 
     const program_state = getProgramState(state.current_program_id);
     const c = program_state.courseData[code];
-    if (!c || c.mandatory) return;
+    if (!c) return;
 
     if (program_state.selected_courses.has(code)) {
-        program_state.selected_courses.delete(code);
+        const options_needing_course = Array.from(program_state.courseOptions[code])
+            .filter(opt_id => program_state.selected_options.has(opt_id))
+            .filter(opt_id => program_state.optionData[opt_id]?.courses
+                .filter(c => c.code === code)
+                .map(c => c.mandatory)[0]
+            )
+        if (options_needing_course.length === 0) {
+            program_state.selected_courses.delete(code);
+        } else {
+            let descr = options_needing_course
+                .map(id => `• ${program_state.optionData[id]?.label || id}`)
+                .join('<br>');
+            showToast("The course could not be removed : mandatory for some selected option",
+                descr
+            )
+        }
+
     } else {
         program_state.selected_courses.add(code);
     }
@@ -636,8 +650,20 @@ function toggleOption(opt) {
 
     if (program_state.selected_options.has(opt_id)) {
         program_state.selected_options.delete(opt_id);
+        Array.from(program_state.optionData[opt_id].courses)
+            .filter(c =>
+                Array.from(program_state.courseOptions[c.code])
+                    .filter(opt_id => program_state.selected_options.has(opt_id))
+                    .length === 0)
+            .map(c => {
+                program_state.selected_courses.delete(c.code)
+            })
     } else {
         program_state.selected_options.add(opt_id);
+        const optionData = program_state.optionData[opt_id];
+        Array.from(optionData.courses).filter(c => c.mandatory).map(c => {
+            program_state.selected_courses.add(c.code);
+        });
     }
     updateAll();
 }
@@ -783,6 +809,40 @@ document.addEventListener('mousemove', e => {
     if (tip.style.display === 'block') moveTooltip(e);
 });
 
+function showToast(message, detail = null, type = 'warn', duration = 3000) {
+    const container = document.getElementById('toast-container');
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    if (detail) {
+        toast.innerHTML = `
+            <span class="toast-short">${message}
+                <span class="toast-more">more</span>
+            </span>
+            <div class="toast-full">${detail}</div>`;
+
+        toast.querySelector('.toast-more').addEventListener('click', () => {
+            const full = toast.querySelector('.toast-full');
+            const btn = toast.querySelector('.toast-more');
+            full.classList.toggle('visible');
+            btn.textContent = full.classList.contains('visible') ? 'less' : 'more';
+        });
+    } else {
+        toast.textContent = message;
+    }
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('visible'));
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('visible');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, duration);
+}
 
 // ─── START ─────────────────────────────────────────────────────
 
