@@ -148,28 +148,27 @@ function setLoadingState(status, message = '') {
 // Builds state.courseData, state.courseOptions, and state.options
 function populateState(program_state, program_data) {
 
-    // ── Tronc commun ──
-    program_state.tronc_commun = program_data.tronc_commun;
-
-    program_data.tronc_commun.forEach(c => {
-        program_state.courseData[c.code] = { ...c };
-        program_state.courseOptions[c.code] = ['tronc'];  // 'tronc' as a sentinel key
-    });
+    // Courses
+    program_state.courseData = program_data.courses
 
     // ── Options — dict keyed by opt.id ──
     program_state.optionData = {};
-
     program_data.options.forEach((opt, i) => {
+        let color = 0;
+        if (opt.id === "tronc") {
+            color = PALETTE[0]
+
+        } else {
+            color = PALETTE[(i % (PALETTE.length - 1)) + 1]
+        }
         const optWithColor = {
             ...opt,
-            color: PALETTE[(i % (PALETTE.length - 1)) + 1],
+            color: color
         };
         program_state.optionData[opt.id] = optWithColor;
 
+        // Add lookup table for the options a course appears in
         opt.courses.forEach(c => {
-            if (!program_state.courseData[c.code]) {
-                program_state.courseData[c.code] = { ...c };
-            }
             if (!program_state.courseOptions[c.code]) {
                 program_state.courseOptions[c.code] = [];
             }
@@ -186,20 +185,12 @@ function autoSelectMandatory(program_state) {
     });
 }
 
-// Returns the option object for a course code, or null for tronc commun.
-function getOptionsForCourse(program_state, code) {
-    const optIds = program_state.courseOptions[code] || [];
-    return optIds
-        .filter(id => id !== 'tronc')
-        .map(id => program_state.optionData[id])
-        .filter(Boolean); // guard against a stale id with no matching option
-}
 
 // Returns the color for a course.
 // Uses the first option's color, or tronc color if it only appears in tronc.
 function getCourseColor(program_state, code) {
-    const opts = getOptionsForCourse(program_state, code);
-    return opts.length > 0 ? opts[0].color : TRONC_COLOR;
+    const opts = program_state.courseOptions[code];
+    return opts.length > 0 ? program_state.optionData[opts[0]].color : TRONC_COLOR;
 }
 
 function getSelectedEcts() {
@@ -274,7 +265,7 @@ function buildCourseCatalogue(program_state) {
     el.appendChild(body);
 
 
-    renderCourseList(body, program_state.tronc_commun, TRONC_COLOR);
+    renderCourseList(body, program_state.optionData["tronc"].courses, TRONC_COLOR);
     container.appendChild(el);
 
     // ── One collapsible group per option ──
@@ -291,6 +282,7 @@ function buildCourseCatalogue(program_state) {
         }
 
         options.forEach(opt => {
+            if (opt.id === "tronc") return;
             const { el, body } = makeCollapsibleGroup(opt);
             renderCourseList(body, opt.courses, opt.color);
             container.appendChild(el);
@@ -323,8 +315,8 @@ function makeCollapsibleGroup(opt) {
     const hdr_content = document.createElement('div');
     hdr_content.className = "option-header-content"
     hdr_content.innerHTML = `
-        <div class="section-title">${opt.label}</div>
-        <div class="section-chevron">▼</div>`;
+        <div class="section-chevron">▼</div>
+        <div class="section-title">${opt.label}</div>`;
     hdr_content.addEventListener('click', () => el.classList.toggle('collapsed'));
 
     const hdr_check = document.createElement('div');
@@ -337,8 +329,8 @@ function makeCollapsibleGroup(opt) {
     hdr.className = 'option-header';
     hdr.dataset.id = opt.id;
     if (program_state.selected_options.has(opt.id)) hdr.classList.add('selected');
-    hdr.appendChild(hdr_check);
     hdr.appendChild(hdr_content);
+    hdr.appendChild(hdr_check);
     el.appendChild(hdr);
 
     const body = document.createElement('div');
@@ -353,13 +345,14 @@ function renderCourseList(container, courses, color) {
     courses.forEach(c => {
         // convert to boolean
         const isMandatory = !!c.mandatory;
+        const courseData = program_state.courseData[c.code]
 
         const row = document.createElement('div');
         row.className = 'course-row';
         row.dataset.code = c.code;
-        row.dataset.lang = c.language || '';
-        row.dataset.semester = c.semester || '';
-        row.dataset.ects = c.ects || 0;
+        row.dataset.lang = courseData.language || '';
+        row.dataset.semester = courseData.semester || '';
+        row.dataset.ects = courseData.ects || 0;
 
         if (isMandatory) row.classList.add('mandatory');
         if (program_state.selected_courses.has(c.code)) row.classList.add('selected');
@@ -368,7 +361,7 @@ function renderCourseList(container, courses, color) {
             <div class="check">${program_state.selected_courses.has(c.code) ? '✓' : ''}</div>
             <div class="course-info">
                 <div class="course-code">${c.code}</div>
-                <div class="course-title" title="${c.title}">${c.title}</div>
+                <div class="course-title" title="${c.title}">${courseData.title}</div>
             </div>
             <div class="course-meta">
                 ${c.ects ? `<span class="badge badge-ects">${c.ects}</span>` : ''}
@@ -379,7 +372,7 @@ function renderCourseList(container, courses, color) {
         if (!isMandatory) {
             row.addEventListener('click', () => toggleCourse(c.code));
         }
-        row.addEventListener('mouseenter', e => showTooltip(e, c));
+        row.addEventListener('mouseenter', e => showTooltip(e, courseData));
         row.addEventListener('mouseleave', hideTooltip);
 
         container.appendChild(row);
@@ -469,13 +462,21 @@ function buildConstraints(program_state) {
         max: totalEcts,
     });
 
+    const tronc_commun = program_state.optionData["tronc"];
+    renderConstraintBar(container, {
+        label: 'Tronc Commun',
+        current: byOption["tronc"],
+        target: tronc_commun.min_ects,
+        max: totalEcts,
+    });
     // One bar per option that has a min_ects constraint
-    Object.values(program_state.optionData).forEach(opt => {
-        if (!opt.min_ects) return;
+    program_state.selected_options.forEach(opt_id => {
+        if (opt_id === "tronc") return;
+        const opt = program_state.optionData[opt_id]
         renderConstraintBar(container, {
             label: opt.label,
             current: byOption[opt.id] || 0,
-            target: opt.min_ects,
+            target: opt.min_ects || 30,
             max: opt.max_ects || null,
             color: opt.color,
         });
@@ -646,7 +647,6 @@ function updateAll() {
 
     // Update selected courses
     document.querySelectorAll('.course-row').forEach(row => {
-        console.log("Selector Course")
         const sel = program_state.selected_courses.has(row.dataset.code);
         row.classList.toggle('selected', sel);
         row.querySelector('.check').textContent = sel ? '✓' : '';
@@ -654,10 +654,7 @@ function updateAll() {
 
     // Update selected options
     document.querySelectorAll('.option-header').forEach(option => {
-        console.log("Selector Option")
-        console.log(option.dataset.id, Number(option.dataset.id))
         if (option.dataset.id !== "tronc") {
-            console.log(option.dataset.id, Number(option.dataset.id))
             const sel = program_state.selected_options.has(Number(option.dataset.id));
             option.classList.toggle('selected', sel);
             option.querySelector('.check').textContent = sel ? '✓' : '';
@@ -668,7 +665,6 @@ function updateAll() {
     buildRadar();
     updateRing(program_state.total_ects);  // pass the program's actual total
     applyFilters();
-    console.log(program_state.selected_options)
 }
 
 

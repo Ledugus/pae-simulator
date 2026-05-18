@@ -17,18 +17,6 @@
   --red: #f05050;
   --red-dim: #3a1010;
   --yellow: #f0d050;
-
-  /* option colors */
-  --col-tronc: #4d7cfe;
-  --col-finalite: #a855f7;
-  --col-energy: #f0a050;
-  --col-telecom: #3dd68c;
-  --col-signal: #f05090;
-  --col-circuits: #50c8f0;
-  --col-crypto: #f0d050;
-  --col-materials: #f07050;
-  --col-socio: #b0c0ff;
-  --col-other: #7a88b0;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -149,13 +137,22 @@ header .ects-total strong {
 .section-group {
   border-bottom: 1px solid var(--border);
 }
+.group-label-header {
+  padding: 10px 16px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
 .option-header {
   padding: 10px 16px 8px;
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
-  gap: 8px;
   transition: background .15s;
 }
 .option-header:hover { background: rgba(255,255,255,0.02); }
@@ -163,6 +160,7 @@ header .ects-total strong {
   display: flex;
   align-items: center;
   flex: 1;                          /* takes remaining width after the check */
+  gap: 8px;
   min-width: 0;
 }
 .section-dot {
@@ -171,8 +169,9 @@ header .ects-total strong {
   flex-shrink: 0;
 }
 .section-title {
+
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-dim);

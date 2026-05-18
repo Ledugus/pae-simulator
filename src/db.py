@@ -30,19 +30,16 @@ def get_program(program_id: int) -> dict | None:
     if program is None:
         return None
 
-    try:
-        tronc_commun_courses = conn.execute(
-            """
-            SELECT c.id, c.code, c.title, c.ects, tc.position, tc.mandatory
-            FROM courses c
-            JOIN tronc_courses tc ON tc.course_id = c.id
-            WHERE tc.program_id = ?
-            ORDER BY tc.position
-            """,
-            (program_id,),
-        ).fetchall()
-    except sqlite3.OperationalError as e:
-        print("Error", e)
+    tronc_commun_courses = conn.execute(
+        """
+        SELECT c.id, c.code, c.title, c.ects, tc.position, tc.mandatory
+        FROM courses c
+        JOIN tronc_courses tc ON tc.course_id = c.id
+        WHERE tc.program_id = ?
+        ORDER BY tc.position
+        """,
+        (program_id,),
+    ).fetchall()
 
     option_rows = conn.execute(
         """
@@ -81,6 +78,44 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
 
     # Index option courses by option_id for quick lookup
     # { option_id: [course, course, ...] }
+    courses = {}
+
+    for row in tronc_rows:
+        courses[row["code"]] = {
+            "id": row["id"],
+            "code": row["code"],
+            "title": row["title"],
+            "ects": row["ects"],
+        }
+
+    for row in course_rows:
+        if row["code"] not in courses:
+            courses[row["code"]] = {
+                "id": row["id"],
+                "code": row["code"],
+                "title": row["title"],
+                "ects": row["ects"],
+            }
+
+    # ── Tronc commun — relationship data only, course data lives in courses ──
+
+    tronc_commun_courses = [
+        {
+            "code": row["code"],
+            "mandatory": bool(row["mandatory"]),
+            "position": row["position"],
+        }
+        for row in tronc_rows
+    ]
+    tronc_commun = {
+        "id": "tronc",
+        "html_id": "tronc",
+        "label": "Tronc Commun",
+        "group_label": None,
+        "courses": tronc_commun_courses,
+    }
+
+    # ── Options — index course rows by option_id first ──
     courses_by_option = {}
     for row in course_rows:
         oid = row["option_id"]
@@ -88,47 +123,30 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
             courses_by_option[oid] = []
         courses_by_option[oid].append(
             {
-                "id": row["id"],
-                "code": row["code"],
-                "title": row["title"],
-                "ects": row["ects"],
+                "code": row["code"],  # reference into the courses dict
                 "mandatory": bool(row["mandatory"]),
                 "position": row["position"],
             }
         )
 
-    # Build the flat options list, each with its courses attached
-    options = []
-    for row in option_rows:
-        options.append(
-            {
-                "id": row["id"],
-                "html_id": row["html_id"],
-                "label": row["label"],
-                "group_label": row["group_label"],
-                "courses": courses_by_option.get(row["id"], []),
-            }
-        )
-
-    # Tronc commun is a flat list — no grouping needed
-    tronc_commun = [
+    options = [
         {
             "id": row["id"],
-            "code": row["code"],
-            "title": row["title"],
-            "ects": row["ects"],
-            "position": row["position"],
-            "mandatory": bool(row["mandatory"]),
+            "html_id": row["html_id"],
+            "label": row["label"],
+            "group_label": row["group_label"],
+            "courses": courses_by_option.get(row["id"], []),
         }
-        for row in tronc_rows
+        for row in option_rows
     ]
+    options.insert(0, tronc_commun)
 
     return {
         "id": program["id"],
         "title": program["title"],
         "total_ects": program["total_ects"],
-        "tronc_commun": tronc_commun,
-        "options": options,
+        "courses": courses,  # dict keyed by code
+        "options": options,  # list of options, each with a courses list
     }
 
 
