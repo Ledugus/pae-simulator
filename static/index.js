@@ -321,6 +321,7 @@ function makeCollapsibleGroup(opt) {
 
 
     const hdr_content = document.createElement('div');
+    hdr_content.className = "option-header-content"
     hdr_content.innerHTML = `
         <div class="section-title">${opt.label}</div>
         <div class="section-chevron">▼</div>`;

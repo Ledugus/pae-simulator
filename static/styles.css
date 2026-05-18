@@ -159,6 +159,12 @@ header .ects-total strong {
   transition: background .15s;
 }
 .option-header:hover { background: rgba(255,255,255,0.02); }
+.option-header-content {   /* targets hdr_content */
+  display: flex;
+  align-items: center;
+  flex: 1;                          /* takes remaining width after the check */
+  min-width: 0;
+}
 .section-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
@@ -173,7 +179,8 @@ header .ects-total strong {
   flex: 1;
 }
 .section-chevron {
-  font-size: 10px; color: var(--text-muted);
+  font-size: 10px; 
+  color: var(--text-muted);
   transition: transform .2s;
 }
 .section-group.collapsed .section-chevron { transform: rotate(-90deg); }
