@@ -32,7 +32,7 @@ def get_program(program_id: int) -> dict | None:
 
     tronc_commun_courses = conn.execute(
         """
-        SELECT c.id, c.code, c.title, c.ects, tc.position, tc.mandatory
+        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.years, c.friendly, tc.position, tc.mandatory
         FROM courses c
         JOIN tronc_courses tc ON tc.course_id = c.id
         WHERE tc.program_id = ?
@@ -53,7 +53,7 @@ def get_program(program_id: int) -> dict | None:
 
     course_rows = conn.execute(
         """
-        SELECT c.id, c.code, c.title, c.ects, oc.option_id, oc.position, oc.mandatory
+        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.years, c.friendly, oc.option_id, oc.position, oc.mandatory
         FROM courses c
         JOIN option_courses oc ON oc.course_id = c.id
         JOIN options o ON o.id = oc.option_id
@@ -63,18 +63,32 @@ def get_program(program_id: int) -> dict | None:
         (program_id,),
     ).fetchall()
 
+    prof_rows = conn.execute(
+        """
+        SELECT p.id, p.name, c.code
+        FROM professors p
+        JOIN teaching t ON t.prof_id = p.id
+        JOIN courses c ON c.id = t.course_id
+        WHERE c.id IN (
+            SELECT course_id FROM tronc_courses WHERE program_id = ?
+            UNION
+            SELECT oc.course_id FROM option_courses oc
+            JOIN options o ON o.id = oc.option_id
+            WHERE o.program_id = ?
+        )
+        ORDER BY c.code
+        """,
+        (program_id, program_id),
+    ).fetchall()
     conn.close()
 
     # ── 4. Build the tree in Python ───────────────────────────────────────────
-    return build_tree(program, tronc_commun_courses, option_rows, course_rows)
+    return build_tree(
+        program, tronc_commun_courses, option_rows, course_rows, prof_rows
+    )
 
 
-def print_program(program, tronc_courses):
-    print(program["total_ects"])
-    print(len(tronc_courses))
-
-
-def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
+def build_tree(program, tronc_rows, option_rows, course_rows, prof_rows) -> dict:
 
     # Index option courses by option_id for quick lookup
     # { option_id: [course, course, ...] }
@@ -86,6 +100,12 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
             "code": row["code"],
             "title": row["title"],
             "ects": row["ects"],
+            "lang": row["lang"],
+            "semester": row["semester"],
+            "hours": row["hours"],
+            "years": row["years"],
+            "friendly": bool(row["friendly"]),
+            "teachers": [],
         }
 
     for row in course_rows:
@@ -95,6 +115,12 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
                 "code": row["code"],
                 "title": row["title"],
                 "ects": row["ects"],
+                "lang": row["lang"],
+                "semester": row["semester"],
+                "hours": row["hours"],
+                "years": row["years"],
+                "friendly": bool(row["friendly"]),
+                "teachers": [],
             }
 
     # ── Tronc commun — relationship data only, course data lives in courses ──
@@ -129,6 +155,11 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
             }
         )
 
+    professors = {}
+    for row in prof_rows:
+        professors[row["id"]] = row["name"]
+        courses[row["code"]]["teachers"].append(row["id"])
+
     options = [
         {
             "id": row["id"],
@@ -147,17 +178,13 @@ def build_tree(program, tronc_rows, option_rows, course_rows) -> dict:
         "total_ects": program["total_ects"],
         "courses": courses,  # dict keyed by code
         "options": options,  # list of options, each with a courses list
+        "professors": professors,
     }
 
 
 def test_db():
 
     conn = get_db()
-    program_id = 1
-    program = conn.execute(
-        "SELECT * FROM programs WHERE id = ?", (program_id,)
-    ).fetchone()
-
     course = conn.execute(
         "SELECT * FROM courses WHERE code = ?", ("LINMA2471",)
     ).fetchone()
@@ -166,6 +193,13 @@ def test_db():
     else:
         print(course["title"])
 
+    prof = conn.execute(
+        "SELECT * FROM teaching WHERE course_id = ?",
+        (int(100),),
+    ).fetchone()[0]
+    print(prof)
+
 
 if __name__ == "__main__":
-    print(get_program(1))
+    test_db()
+    get_program(1)

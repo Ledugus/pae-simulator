@@ -1,5 +1,4 @@
 import sqlite3
-import json
 from datetime import datetime, timezone, timedelta
 
 from scrape import parse_program, parse_program_list
@@ -25,7 +24,23 @@ CREATE TABLE IF NOT EXISTS courses (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     code  TEXT    NOT NULL UNIQUE, 
     title TEXT    NOT NULL,
-    ects  INTEGER
+    ects  INTEGER,
+    lang  TEXT,
+    semester INTEGER,
+    hours  INTEGER,
+    years  INTEGER,
+    friendly INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS professors (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    name  TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS teaching (
+    course_id     INTEGER NOT NULL REFERENCES courses(id),
+    prof_id       INTEGER NOT NULL REFERENCES professors(id),
+    PRIMARY KEY (course_id, prof_id)
 );
 
 CREATE TABLE IF NOT EXISTS prerequisites (
@@ -49,6 +64,7 @@ CREATE TABLE IF NOT EXISTS option_courses (
     mandatory   INTEGER NOT NULL DEFAULT 0, -- 1 = mandatory
     PRIMARY KEY (option_id, course_id)
 );
+
 
 CREATE TABLE IF NOT EXISTS metadata (
     key   TEXT PRIMARY KEY,
@@ -136,25 +152,25 @@ def delete_program(cursor: sqlite3.Cursor, program_id: int) -> None:
     You must delete children before parents to respect foreign key constraints.
     """
 
-    # Find all section ids belonging to this program
-    section_ids = [
+    # Find all option ids belonging to this program
+    option_ids = [
         row[0]
         for row in cursor.execute(
-            "SELECT id FROM sections WHERE program_id = ?", (program_id,)
+            "SELECT id FROM options WHERE program_id = ?", (program_id,)
         ).fetchall()
     ]
 
-    if section_ids:
+    if option_ids:
         # SQLite doesn't support WHERE IN with a list natively,
         # so we build the placeholders dynamically.
-        placeholders = ",".join("?" * len(section_ids))
+        placeholders = ",".join("?" * len(option_ids))
 
         cursor.execute(
-            f"DELETE FROM section_courses WHERE section_id IN ({placeholders})",
-            section_ids,
+            f"DELETE FROM option_courses WHERE option_id IN ({placeholders})",
+            option_ids,
         )
 
-    cursor.execute("DELETE FROM sections WHERE program_id = ?", (program_id,))
+    cursor.execute("DELETE FROM options WHERE program_id = ?", (program_id,))
     cursor.execute("DELETE FROM programs WHERE id = ?", (program_id,))
 
 
@@ -182,8 +198,8 @@ def insert_option(
     position: int,
 ) -> None:
     """
-    Inserts one section row, then recurses into subsections.
-    Courses in this section are linked via section_courses.
+    Inserts one option row, then recurses into subsections.
+    Courses in this option are linked via option_courses.
     """
     cursor.execute(
         """
@@ -198,9 +214,9 @@ def insert_option(
             position,
         ),
     )
-    option_db_id = cursor.lastrowid  # this section's new database id
+    option_db_id = cursor.lastrowid  # this option's new database id
 
-    # Insert courses that belong directly to this section
+    # Insert courses that belong directly to this option
     for course in option["courses"]:
         course_db_id = insert_or_get_course(cursor, course)
         cursor.execute(
@@ -211,36 +227,67 @@ def insert_option(
             (option_db_id, course_db_id, course["position"], course["mandatory"]),
         )
 
-    # Recurse into subsections, passing this section's db id as parent_id
-    # for pos, subsection in enumerate(option["subsections"]):
-    #     insert_option(
-    #         cursor, subsection, program_id, parent_id=option_db_id, position=pos
-    #     )
-
 
 def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
     """
     Inserts a course if its code doesn't exist yet, otherwise fetches the
     existing row's id. This is how the same course can appear in multiple
-    sections without being duplicated in the courses table.
+    options without being duplicated in the courses table.
 
     Returns the course's database id.
     """
     cursor.execute(
         """
-        INSERT INTO courses (code, title, ects)
-        VALUES (?, ?, ?)
+        INSERT INTO courses (code, title, ects, lang, semester, hours, years, friendly)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(code) DO NOTHING
         """,
-        (course["code"], course["title"], course.get("ects")),
+        (
+            course["code"],
+            course["title"],
+            course.get("ects"),
+            course.get("lang"),
+            course.get("semester"),
+            course.get("hours"),
+            course.get("years"),
+            course.get("friendly"),
+        ),
     )
 
     # Whether we just inserted or the row already existed, fetch the id
     cursor.execute("SELECT id FROM courses WHERE code = ?", (course["code"],))
-    return cursor.fetchone()[0]
+    course_id = cursor.fetchone()[0]
+
+    # Add the teachers, and the teaching relation course-professor
+    teachers = course.get("teachers")
+    if teachers:
+        for teacher in teachers:
+            cursor.execute(
+                """
+                INSERT INTO professors (name)
+                VALUES (?)
+                ON CONFLICT(name) DO NOTHING
+                """,
+                (teacher,),
+            )
+
+            teacher_id = cursor.execute(
+                "SELECT id FROM professors WHERE name = ?", (teacher,)
+            ).fetchone()[0]
+
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO teaching (course_id, prof_id)
+                VALUES (?, ?)
+                """,
+                (course_id, teacher_id),
+            )
+
+    return course_id
 
 
 if __name__ == "__main__":
+    os.remove("database.db")
     conn = sqlite3.connect("database.db")
 
     init_db(conn)

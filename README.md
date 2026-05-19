@@ -9,21 +9,16 @@ Choississez un programme de Master parmi ceux proposés dans l'onglets "Programm
 
 ## TODO:
 Structure de database : 
-- considérer le tronc commun comme une option
-- ajouter un champ "obligatoire" pour les options (=tronc commun et finalité spécialisée obligatoire)
-- ajouter les champs au cours (url, profs, langue, quadri)
+- ajouter les champs au cours (url)
 
 Scraping : 
-- Scrape cours et prérequis
+- Scrape prérequis
 
 Logique de validation : 
 - ajouter les règles de validation des options (=cours obligatoire + minimum ects)
 - règle de prérequis
-- 
 
 UI : 
-- Cours obligatoires pas cliquables → pas activables
-- Meilleur titre de group-label
 - Texte de la toile d'araignée
 - Panels ajustables
 - Liens cliquables pour les cours

@@ -2,8 +2,6 @@ import requests
 import re
 from bs4 import BeautifulSoup, Tag
 
-from db import get_all_programs, get_program
-
 
 def parse_program_list():
     urls = {}
@@ -162,57 +160,116 @@ def add_courses(courses, option_course_list):
     return option_course_list
 
 
-def extract_courses(container: Tag) -> list[dict]:
-    """
-    Finds all course rows inside a container div.
-    Each course row is a div.row containing a link to a course page
-    (href matching 'cours-2025-...').
-
-    Returns a list of minimal dicts — just enough to identify each course.
-    Extend this function when you need more fields (ECTS, language, etc.)
-    """
+def extract_courses(container):
     courses = []
-    seen_codes = set()  # against duplicate
-    for pos, row in enumerate(container.find_all("div", class_="row")):
-        link = row.find("a", href=re.compile(r"cours-\d{4}-"))
+    position = 0
+    seen_codes = set([])
 
+    for row in container.find_all("div", class_="row"):
+        link = row.find("a", href=re.compile(r"cours-\d{4}-"))
         if link is None:
             continue
 
-        # CODE
-        code = (
-            link["href"].split("-", 2)[-1].upper()
-        )  # 'cours-2025-lelec2990' -> 'LELEC2990'
-
+        code = link["href"].split("-", 2)[-1].upper()
         if code in seen_codes:
             continue
         seen_codes.add(code)
 
-        # TITLE
+        cols = row.find_all("div", class_="col-sm-6")
+        left = cols[0] if len(cols) > 0 else row
+        right = cols[1] if len(cols) > 1 else None
+
+        # ── LEFT COLUMN ──────────────────────────────────────────
         title = link.get_text(strip=True)
 
-        # ECTS
-        credits_span = row.find("span", string=re.compile(r"crédits")).get_text(
-            strip=True
-        )
-        try:
-            ects = int(credits_span.strip().split()[0])
-        except:
-            ects = None
+        obl_img = left.find("img", alt=re.compile(r"Obligatoire|Optionnel", re.I))
+        mandatory = bool(obl_img and obl_img["alt"] == "Obligatoire")
 
-        # MANDATORY
-        obl_img = row.find("img", alt=re.compile(r"Obligatoire|Optionnel", re.I))
-        mandatory = obl_img and obl_img["alt"] == "Obligatoire"
+        # ── RIGHT COLUMN ─────────────────────────────────────────
+        lang = None
+        semester = None
+        hours = None
+        blocs = []
+        friendly = False
+        teachers = []
+
+        if right:
+            # Language — inside a <code> tag
+            lang_code = right.find("code")
+            if lang_code:
+                lang = lang_code.get_text(strip=True)
+
+            # Blocs — 1, 2, 3 meaning both, None = not found
+            bloc_imgs = right.find_all("img", title=re.compile(r"bloc annuel"))
+            if len(bloc_imgs) >= 2:
+                blocs = 3  # appears in both blocs
+            elif len(bloc_imgs) == 1:
+                m = re.search(r"(\d+)", bloc_imgs[0]["title"])
+                blocs = int(m.group(1)) if m else None
+            else:
+                blocs = None  # no info — treat as both
+
+            # Semester — 1, 2, 3 meaning both, None = not found
+            semesters_found = []
+            for span in right.find_all("span", recursive=False):
+                t = span.get_text(strip=True)
+                if re.match(r"^q[12]$", t):
+                    semesters_found.append(int(t[1]))  # 'q1' -> 1, 'q2' -> 2
+
+            if len(semesters_found) == 1:
+                semester = semesters_found[0]
+            if len(semesters_found) == 2:
+                semester = 3
+            else:
+                semester = None  # 0 found
+
+            # Hours — sum of all numeric hour values found in the span
+            hours = None
+            for span in right.find_all("span", recursive=False):
+                t = span.get_text(strip=True)
+                if re.match(r"\d+h", t):
+                    # extract all numbers before 'h' — e.g. '22.5h+22.5h' -> [22.5, 22.5]
+                    parts = re.findall(r"(\d+(?:\.\d+)?)h", t)
+                    if parts:
+                        total = sum(float(p) for p in parts)
+                        hours = int(total)
+
+            # French-friendly flag — presence of the .friendly span with content
+            friendly_span = right.find("span", class_="friendly")
+            if friendly_span and friendly_span.get_text(strip=True):
+                friendly = True
+
+            # Teachers — use teachers_nopopup to avoid duplicates from the popup copy
+            teacher_div = right.find("div", class_="teachers_nopopup")
+            if teacher_div:
+                teachers = [a.get_text(strip=True) for a in teacher_div.find_all("a")]
+
+        # ── CREDITS ──────────────────────────────────────────────
+        ects = None
+        credits_span = row.find("span", string=re.compile(r"crédits"))
+        if credits_span:
+            try:
+                ects = int(credits_span.get_text(strip=True).split()[0])
+            except (ValueError, IndexError):
+                pass
 
         courses.append(
             {
                 "code": code,
                 "title": title,
                 "ects": ects,
+                "lang": lang,
+                "semester": semester,
+                "hours": hours,
+                "years": blocs,
+                "friendly": friendly,
+                "teachers": teachers,
+                # data for options
                 "mandatory": mandatory,
-                "position": pos,
+                "position": position,
             }
         )
+        position += 1
 
     return courses
 
