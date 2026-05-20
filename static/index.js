@@ -47,6 +47,7 @@ function getProgramState(program_id) {
             selected_options: new Set(),
             activeFilter: 'all',
             searchQuery: '',
+            activeView: 'list',
         });
     }
     return state.programs.get(program_id);
@@ -83,6 +84,7 @@ async function init() {
         buildProgramSelector(allPrograms);
         wireFilters();
         wireSearch();
+        wireViewSwitcher();
 
         setLoadingState('ready');
     } catch (error) {
@@ -109,7 +111,8 @@ async function loadProgram(program_id) {
         if (!program_state.populated) {
             let program_data = await fetchProgram(program_id);
             populateState(program_state, program_data);
-            program_state.populated = true; // only mark populated after data is in
+            program_state.populated = true;
+            program_state.activeView = "list";
         }
         state.current_program_id = program_id
         buildPageOfProgram(program_state);
@@ -124,7 +127,7 @@ async function loadProgram(program_id) {
 function buildPageOfProgram(program_state) {
     autoSelectMandatory(program_state);
     buildCourseCatalogue(program_state);
-    buildProgramList();
+    buildProgramView(program_state);
     buildConstraints(program_state);
     buildRadar();
     updateRing(program_state.total_ects);
@@ -147,7 +150,6 @@ function setLoadingState(status, message = '') {
 
 // Builds state.courseData, state.courseOptions, and state.options
 function populateState(program_state, program_data) {
-
     // Courses
     program_state.courseData = program_data.courses
 
@@ -379,6 +381,55 @@ function renderCourseList(container, courses, color) {
 
 
 // ─── BUILD PROGRAM (middle panel) ──────────────────────────────
+function buildProgramView(program_state) {
+    const viewType = program_state.activeView;
+    if (viewType === "list") {
+        buildProgramList();
+    } else if (viewType === "grid") {
+        buildProgramGrid();
+    } else {
+        return
+    }
+}
+
+function buildProgramGrid() {
+    const program_state = getProgramState(state.current_program_id);
+    const container = document.getElementById('program-content');
+
+    container.innerHTML = `
+    <div id="grid-view" class="hidden">
+      <div class="year-grid">
+        ${[1, 2].map(year => [1, 2].map(sem => `
+          <div class="grid-col">
+            <div class="grid-col-header">M${year} — Q${sem}</div>
+            <div class="grid-col-courses" data-year="${year}" data-semester="${sem}"></div>
+          </div>
+        `).join('')).join('')}
+      </div>
+    </div>`;
+
+    Array.from(program_state.selected_courses)
+        .map(code => program_state.courseData[code])
+        .filter(Boolean)
+        .forEach(c => {
+            const col = container.querySelector(
+                `.grid-col-courses[data-year="${c.years}"][data-semester="1"]`
+            );
+            if (!col) return;
+
+            const card = document.createElement('div');
+            card.className = `course-card option-${program_state.options[program_state.courseOptions[0]].color ?? 'a'}`;
+            card.style.setProperty('--ects', c.ects);
+            card.innerHTML = `
+                <div class="course-card-title">${c.title}</div>
+                <div class="course-card-code">${c.code}</div>
+                <div class="course-card-footer">
+                    <span class="course-card-lang">${c.lang}</span>
+                    <span class="course-card-ects">${c.ects} ECTS</span>
+                </div>`;
+            col.appendChild(card);
+        });
+}
 
 function buildProgramList() {
     const program_state = getProgramState(state.current_program_id);
@@ -686,7 +737,7 @@ function updateAll() {
             option.querySelector('.check').textContent = sel ? '✓' : '';
         }
     });
-    buildProgramList();
+    buildProgramView(program_state);
     buildConstraints(program_state);
     buildRadar();
     updateRing(program_state.total_ects);  // pass the program's actual total
@@ -758,6 +809,19 @@ function wireSearch() {
         }
         clear.style.display = 'none';
         applyFilters();
+    });
+}
+
+function wireViewSwitcher() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const program_state = getProgramState(state.current_program_id)
+            program_state.activeView = btn.dataset.view;
+            buildProgramView(program_state);
+        });
     });
 }
 

@@ -275,7 +275,6 @@ header .ects-total strong {
   text-overflow: ellipsis;
   line-height: 1.4;
 }
-.course-row.mandatory .course-title { color: var(--text-dim); }
 .course-meta {
   display: flex; align-items: center; gap: 5px; flex-shrink: 0;
 }
@@ -306,7 +305,31 @@ header .ects-total strong {
 #panel-program {
   border-right: 1px solid var(--border);
 }
+#panel-program .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.view-switcher {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
 
+.view-btn {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.view-btn.active {
+    background: var(--accent-color);
+    color: white;
+}
 .program-section {
   border-bottom: 1px solid var(--border);
   padding: 12px 16px;
@@ -380,7 +403,101 @@ header .ects-total strong {
   font-style: italic;
   padding: 4px 0;
 }
+.year-grid {
+    display: flex;
+    height: 100%;
+}
 
+.grid-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+}
+
+.grid-col:last-child {
+    border-right: none;
+}
+
+.grid-col-header {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.grid-col-courses {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.course-card {
+    --ects: 5;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--card-border);
+    background: var(--card-bg);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.course-card-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--card-text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.course-card-code {
+    font-size: 11px;
+    color: var(--card-text-mid);
+    margin-top: 2px;
+}
+
+.course-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-card-lang {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--card-badge-bg);
+    color: var(--card-text-dark);
+}
+
+.course-card-ects {
+    font-size: 10px;
+    color: var(--card-text-mid);
+}
+
+.course-card.option-a {
+    --card-bg: #E6F1FB;
+    --card-border: #85B7EB;
+    --card-text-dark: #0C447C;
+    --card-text-mid: #185FA5;
+    --card-badge-bg: #B5D4F4;
+}
+
+.course-card.option-b {
+    --card-bg: #EAF3DE;
+    --card-border: #97C459;
+    --card-text-dark: #27500A;
+    --card-text-mid: #3B6D11;
+    --card-badge-bg: #C0DD97;
+}
 /* ── RIGHT: CONSTRAINTS + RADAR ── */
 #panel-constraints {
   overflow-y: auto;
