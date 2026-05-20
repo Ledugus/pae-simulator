@@ -113,6 +113,15 @@ header .ects-total strong {
   font-weight: 400;
 }
 
+.results-count {
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex: 1;
+}
+
 /* ── LEFT: COURSE BROWSER ── */
 #panel-browser {}
 

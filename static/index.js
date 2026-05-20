@@ -697,35 +697,33 @@ function updateAll() {
 // ─── FILTERS ───────────────────────────────────────────────────
 
 function applyFilters() {
-
+    let total_results = 0;
     const program_state = getProgramState(state.current_program_id);
-    const f = program_state.activeFilter;
-    const q = program_state.searchQuery.toLowerCase();
+    const { activeFilter: f, searchQuery, courseData } = program_state;
+    const q = searchQuery.toLowerCase();
 
     document.querySelectorAll('.course-row').forEach(row => {
-        const { lang, semester, ects, code } = row.dataset;
-        const title = program_state.courseData[code]?.title?.toLowerCase() || '';
+        const course = courseData[row.dataset.code];
+        if (!course) return;
 
         const filterOk = (
             f === 'all' ||
-            (f === 'EN' && lang === 'EN') ||
-            (f === 'FR' && lang === 'FR') ||
-            (f === 'q1' && semester === 'q1') ||
-            (f === 'q2' && semester === 'q2') ||
-            (f === '5' && ects === '5')
+            (f === 'EN' && course.lang === 'EN') ||
+            (f === 'FR' && course.lang === 'FR') ||
+            (f === 'q1' && course.semester === 1) ||  // number comparison works naturally
+            (f === 'q2' && course.semester === 2) ||
+            (f === '5' && course.ects === 5)
         );
-        const searchOk = !q || title.includes(q) || code.toLowerCase().includes(q);
-
+        const searchOk = !q || course.title.toLowerCase().includes(q) || course.code.toLowerCase().includes(q);
         row.classList.toggle('hidden', !filterOk || !searchOk);
-    });
+        if (filterOk && searchOk) {
+            total_results += 1;
+        }
 
-    document.querySelectorAll('.section-group').forEach(grp => {
-        const anyVisible = Array.from(grp.querySelectorAll('.course-row'))
-            .some(r => !r.classList.contains('hidden'));
-        grp.style.display = !anyVisible && q ? 'none' : '';
     });
+    document.getElementById('results-count').innerHTML = total_results;
+
 }
-
 function wireFilters() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -788,7 +786,7 @@ function showTooltip(e, c) {
     tip.innerHTML = `
         <strong style="color:var(--text)">${c.title}</strong><br>
         <span style="color:var(--text-muted)">${c.code}</span><br>
-        ${c.hours ? `<span>${c.hours}</span> &nbsp;` : ''}
+        ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
         ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
         ${c.blocs?.length ? `&nbsp;Bloc ${c.blocs.join(',')}` : ''}`;
     moveTooltip(e);
