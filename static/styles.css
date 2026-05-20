@@ -268,12 +268,19 @@ header .ects-total strong {
   letter-spacing: 0.05em;
 }
 .course-title {
-  font-size: 12px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
+    display: block;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.course-title:hover {
+    text-decoration: underline;
+    color: #4d7cfe;
 }
 .course-meta {
   display: flex; align-items: center; gap: 5px; flex-shrink: 0;

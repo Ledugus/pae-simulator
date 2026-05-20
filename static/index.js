@@ -7,20 +7,19 @@
 // Static colour palette for options, assigned by index at load time.
 // The tronc commun always gets the first colour.
 
-const PALETTE = [
-    '#4d7cfe', // tronc commun (always)
-    '#f0a050',
-    '#3dd68c',
-    '#f05090',
-    '#50c8f0',
-    '#f0d050',
-    '#f07050',
-    '#a855f7',
-    '#b0c0ff',
-    '#7a88b0',
+const OPTION_COLORS = [
+    { bg: '#eef2ff', primary: '#4d7cfe', dark: '#1a3a8f', mid: '#2d55c8', badge: '#c7d4fd' }, // blue
+    { bg: '#fef3e8', primary: '#f0a050', dark: '#7a3f00', mid: '#b85f00', badge: '#fdd9a8' }, // orange
+    { bg: '#e8faf2', primary: '#3dd68c', dark: '#0d5c34', mid: '#1a8c52', badge: '#a8eece' }, // green
+    { bg: '#fde8f2', primary: '#f05090', dark: '#7a0038', mid: '#b8005a', badge: '#f9b0d1' }, // pink
+    { bg: '#e8f8fd', primary: '#50c8f0', dark: '#004d6b', mid: '#007aa0', badge: '#a8e4f8' }, // cyan
+    { bg: '#fefae8', primary: '#f0d050', dark: '#6b4e00', mid: '#a07800', badge: '#f8eba8' }, // yellow
+    { bg: '#fdf0ed', primary: '#f07050', dark: '#7a2000', mid: '#b83800', badge: '#f8c4b8' }, // red-orange
+    { bg: '#f5eeff', primary: '#a855f7', dark: '#4a0080', mid: '#7200bf', badge: '#dbb8fd' }, // purple
+    { bg: '#eef0ff', primary: '#b0c0ff', dark: '#1a2880', mid: '#3040c0', badge: '#d0d8ff' }, // periwinkle
+    { bg: '#f0f2f8', primary: '#7a88b0', dark: '#1e2a45', mid: '#3a4a70', badge: '#c0c8e0' }, // slate
 ];
-
-const TRONC_COLOR = PALETTE[0];
+const TRONC_COLORS = OPTION_COLORS[0];
 
 const RADAR_MAX = 20; // ECTS for 100% on radar
 
@@ -156,16 +155,16 @@ function populateState(program_state, program_data) {
     // ── Options — dict keyed by opt.id ──
     program_state.optionData = {};
     program_data.options.forEach((opt, i) => {
-        let color = 0;
+        let palette;
         if (opt.id === "tronc") {
-            color = PALETTE[0]
+            palette = OPTION_COLORS[0]
 
         } else {
-            color = PALETTE[(i % (PALETTE.length - 1)) + 1]
+            palette = OPTION_COLORS[(i % (OPTION_COLORS.length - 1)) + 1]
         }
         const optWithColor = {
             ...opt,
-            color: color
+            palette: palette
         };
         program_state.optionData[opt.id] = optWithColor;
 
@@ -188,11 +187,10 @@ function autoSelectMandatory(program_state) {
 }
 
 
-// Returns the color for a course.
-// Uses the first option's color, or tronc color if it only appears in tronc.
-function getCourseColor(program_state, code) {
-    const opts = program_state.courseOptions[code];
-    return opts.length > 0 ? program_state.optionData[opts[0]].color : TRONC_COLOR;
+// Returns the color palette for a course.
+// Uses the first option's color palette
+function getCourseColorPalette(program_state, code) {
+    return program_state.optionData[program_state.courseOptions[code][0]].palette;
 }
 
 function getSelectedEcts() {
@@ -257,7 +255,7 @@ function buildCourseCatalogue(program_state) {
     hdr.className = 'option-header';
     hdr.dataset.id = "tronc";
     hdr.innerHTML = `
-        <div class="section-chevron">▼</div>
+        <div class="section-chevron" style="color: ${TRONC_COLORS.primary}">▼</div>
         <div class="section-title">Tronc commun</div>`;
     hdr.addEventListener('click', () => el.classList.toggle('collapsed'));
     el.appendChild(hdr);
@@ -267,7 +265,7 @@ function buildCourseCatalogue(program_state) {
     el.appendChild(body);
 
 
-    renderCourseList(body, program_state.optionData["tronc"].courses, TRONC_COLOR);
+    renderCourseList(body, program_state.optionData["tronc"].courses, TRONC_COLORS);
     container.appendChild(el);
 
     // ── One collapsible group per option ──
@@ -286,7 +284,7 @@ function buildCourseCatalogue(program_state) {
         options.forEach(opt => {
             if (opt.id === "tronc") return;
             const { el, body } = makeCollapsibleGroup(opt);
-            renderCourseList(body, opt.courses, opt.color);
+            renderCourseList(body, opt.courses, opt.palette);
             container.appendChild(el);
         });
     });
@@ -317,7 +315,7 @@ function makeCollapsibleGroup(opt) {
     const hdr_content = document.createElement('div');
     hdr_content.className = "option-header-content"
     hdr_content.innerHTML = `
-        <div class="section-chevron">▼</div>
+    <div class="section-chevron" style="color: ${opt.palette.primary}">▼</div>
         <div class="section-title">${opt.label}</div>`;
     hdr_content.addEventListener('click', () => el.classList.toggle('collapsed'));
 
@@ -342,37 +340,37 @@ function makeCollapsibleGroup(opt) {
     return { el, body };
 }
 
-function renderCourseList(container, courses, color) {
+function renderCourseList(container, courses, palette) {
     let program_state = getProgramState(state.current_program_id)
     courses.forEach(c => {
         // convert to boolean
         const isMandatory = !!c.mandatory;
-        const courseData = program_state.courseData[c.code]
+        const course = program_state.courseData[c.code]
 
         const row = document.createElement('div');
         row.className = 'course-row';
-        row.dataset.code = c.code;
-        row.dataset.lang = courseData.language || '';
-        row.dataset.semester = courseData.semester || '';
-        row.dataset.ects = courseData.ects || 0;
+        row.dataset.code = course.code;
+        row.dataset.lang = course.lang || '';
+        row.dataset.semester = course.semester || '';
+        row.dataset.ects = course.ects || 0;
 
         if (isMandatory) row.classList.add('mandatory');
-        if (program_state.selected_courses.has(c.code)) row.classList.add('selected');
+        if (program_state.selected_courses.has(course.code)) row.classList.add('selected');
 
         row.innerHTML = `
-            <div class="check">${program_state.selected_courses.has(c.code) ? '✓' : ''}</div>
+            <div class="check">${program_state.selected_courses.has(course.code) ? '✓' : ''}</div>
             <div class="course-info">
-                <div class="course-code">${c.code}</div>
-                <div class="course-title" title="${c.title}">${courseData.title}</div>
+                <div class="course-code">${course.code}</div>
+                <a class="course-title" href="https://uclouvain.be/cours-2026-${course.code.toLowerCase()}" target="_blank">${course.title}</a>
             </div>
             <div class="course-meta">
-                ${c.ects ? `<span class="badge badge-ects">${c.ects}</span>` : ''}
-                ${c.language ? `<span class="badge badge-lang">${c.language}</span>` : ''}
-                ${c.semester ? `<span class="badge badge-q">${c.semester}</span>` : ''}
+                ${course.ects ? `<span class="badge badge-ects">${course.ects}</span>` : ''}
+                ${course.lang ? `<span class="badge badge-lang">${course.lang}</span>` : ''}
+                ${course.semester ? `<span class="badge badge-q">${course.semester}</span>` : ''}
             </div>`;
 
-        row.addEventListener('click', () => toggleCourse(c.code));
-        row.addEventListener('mouseenter', e => showTooltip(e, courseData));
+        row.addEventListener('click', () => toggleCourse(course.code));
+        row.addEventListener('mouseenter', e => showTooltip(e, course));
         row.addEventListener('mouseleave', hideTooltip);
 
         container.appendChild(row);
@@ -413,12 +411,15 @@ function buildProgramGrid() {
         .filter(Boolean)
         .forEach(c => {
             const col = container.querySelector(
-                `.grid-col-courses[data-year="${c.years}"][data-semester="1"]`
+                `.grid-col-courses[data-year="${c.years}"][data-semester="${c.semester}"]`
             );
             if (!col) return;
 
+            const palette = getCourseColorPalette(program_state, c.code);
             const card = document.createElement('div');
-            card.className = `course-card option-${program_state.options[program_state.courseOptions[0]].color ?? 'a'}`;
+            card.className = `course-card`;
+            card.style.setProperty('--card-bg', palette.bg);
+            card.style.setProperty('--card-border', palette.primary);
             card.style.setProperty('--ects', c.ects);
             card.innerHTML = `
                 <div class="course-card-title">${c.title}</div>
@@ -444,7 +445,7 @@ function buildProgramList() {
 
     if (troncCourses.length) {
         hasAny = true;
-        container.appendChild(makeProgramSection('Tronc commun', TRONC_COLOR, troncCourses));
+        container.appendChild(makeProgramSection('Tronc commun', TRONC_COLORS, troncCourses));
     }
     // ── Options (only show options that have at least one course selected) ──
     Object.values(program_state.optionData).forEach(opt => {
@@ -454,7 +455,7 @@ function buildProgramList() {
 
         if (!courses.length) return;
         hasAny = true;
-        container.appendChild(makeProgramSection(opt.label, opt.color, courses));
+        container.appendChild(makeProgramSection(opt.label, opt.palette, courses));
     });
 
     if (!hasAny) {
@@ -462,14 +463,14 @@ function buildProgramList() {
     }
 }
 
-function makeProgramSection(label, color, courses) {
+function makeProgramSection(label, palette, courses) {
     const totalEcts = courses.reduce((s, c) => s + (c.ects || 0), 0);
 
     const sec = document.createElement('div');
     sec.className = 'program-section';
     sec.innerHTML = `
         <div class="program-section-header">
-            <div class="program-section-dot" style="background:${color}"></div>
+            <div class="program-section-dot" style="background:${palette.primary}"></div>
             <div class="program-section-name">${label}</div>
             <span class="badge badge-ects">${totalEcts} ECTS</span>
         </div>`;
@@ -478,7 +479,7 @@ function makeProgramSection(label, color, courses) {
         const item = document.createElement('div');
         item.className = 'program-course-item';
         item.innerHTML = `
-            <div class="program-course-dot" style="background:${color}"></div>
+            <div class="program-course-dot" style="background:${palette.primary}"></div>
             <div class="program-course-name" title="${c.title}">${c.title}</div>
             <div class="program-course-ects">${c.ects || '?'}</div>
             ${!c.mandatory
@@ -527,7 +528,7 @@ function buildConstraints(program_state) {
             current: byOption[opt.id] || 0,
             target: opt.min_ects || 30,
             max: opt.max_ects || null,
-            color: opt.color,
+            color: opt.palette.primary,
         });
     });
 }
@@ -610,7 +611,7 @@ function buildRadar() {
         txt.setAttribute('x', lx);
         txt.setAttribute('y', ly + 4);
         txt.setAttribute('text-anchor', Math.abs(Math.cos(a)) < 0.1 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end');
-        txt.setAttribute('fill', opt.color);
+        txt.setAttribute('fill', opt.palette.primary);
         txt.setAttribute('font-size', '9');
         txt.setAttribute('font-family', 'DM Sans, sans-serif');
         txt.textContent = opt.label;
@@ -639,7 +640,7 @@ function buildRadar() {
         circ.setAttribute('cx', cx + r * val * Math.cos(a));
         circ.setAttribute('cy', cy + r * val * Math.sin(a));
         circ.setAttribute('r', '3');
-        circ.setAttribute('fill', opt.color);
+        circ.setAttribute('fill', opt.palette.primary);
         svg.appendChild(circ);
     });
 }
@@ -761,8 +762,8 @@ function applyFilters() {
             f === 'all' ||
             (f === 'EN' && course.lang === 'EN') ||
             (f === 'FR' && course.lang === 'FR') ||
-            (f === 'q1' && course.semester === 1) ||  // number comparison works naturally
-            (f === 'q2' && course.semester === 2) ||
+            (f === 'q1' && course.semester % 2 === 1) ||  // number comparison works naturally
+            (f === 'q2' && course.semester - 2 >= 0) ||
             (f === '5' && course.ects === 5)
         );
         const searchOk = !q || course.title.toLowerCase().includes(q) || course.code.toLowerCase().includes(q);
@@ -852,7 +853,7 @@ function showTooltip(e, c) {
         <span style="color:var(--text-muted)">${c.code}</span><br>
         ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
         ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
-        ${c.blocs?.length ? `&nbsp;Bloc ${c.blocs.join(',')}` : ''}`;
+        ${c.years?.length ? `&nbsp;Bloc ${c.years.join(',')}` : ''}`;
     moveTooltip(e);
 }
 

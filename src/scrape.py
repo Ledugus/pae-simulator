@@ -187,7 +187,7 @@ def extract_courses(container):
 
         # ── RIGHT COLUMN ─────────────────────────────────────────
         lang = None
-        semester = None
+        semester = 0
         hours = None
         blocs = []
         friendly = False
@@ -210,18 +210,12 @@ def extract_courses(container):
                 blocs = None  # no info — treat as both
 
             # Semester — 1, 2, 3 meaning both, None = not found
-            semesters_found = []
             for span in right.find_all("span", recursive=False):
                 t = span.get_text(strip=True)
-                if re.match(r"^q[12]$", t):
-                    semesters_found.append(int(t[1]))  # 'q1' -> 1, 'q2' -> 2
-
-            if len(semesters_found) == 1:
-                semester = semesters_found[0]
-            if len(semesters_found) == 2:
-                semester = 3
-            else:
-                semester = None  # 0 found
+                if "q1" in t:
+                    semester += 1  # 'q1' -> 1, 'q2' -> 2
+                if "q2" in t:
+                    semester += 2
 
             # Hours — sum of all numeric hour values found in the span
             hours = None

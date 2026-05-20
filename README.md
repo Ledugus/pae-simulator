@@ -8,9 +8,6 @@ Outil de composition et simulation de PAE (Programme Annuel Etudiant) orienté p
 Choississez un programme de Master parmi ceux proposés dans l'onglets "Programmes". Composez ensuite votre PAE en ajoutant les cours qui vous plaisent jusqu'à atteindre le nombre de crédits suffisants. Le composeur vous donnera alors l'intitulé du diplôme ainsi que l'orientation générale du programme constitué.
 
 ## TODO:
-Structure de database : 
-- ajouter les champs au cours (url)
-
 Scraping : 
 - Scrape prérequis
 
@@ -22,7 +19,7 @@ UI :
 - Texte de la toile d'araignée
 - Panels ajustables
 - Liens cliquables pour les cours
-- Arrangement des cours choisis selon le quadri (histogram d'ects/quadri)
+- Arrangement des cours choisis selon le quadri
 
 Collab : 
 - Faire la repo github
