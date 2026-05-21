@@ -8,16 +8,16 @@
 // The tronc commun always gets the first colour.
 
 const OPTION_COLORS = [
-    { bg: '#eef2ff', primary: '#4d7cfe', dark: '#1a3a8f', mid: '#2d55c8', badge: '#c7d4fd' }, // blue
-    { bg: '#fef3e8', primary: '#f0a050', dark: '#7a3f00', mid: '#b85f00', badge: '#fdd9a8' }, // orange
-    { bg: '#e8faf2', primary: '#3dd68c', dark: '#0d5c34', mid: '#1a8c52', badge: '#a8eece' }, // green
-    { bg: '#fde8f2', primary: '#f05090', dark: '#7a0038', mid: '#b8005a', badge: '#f9b0d1' }, // pink
-    { bg: '#e8f8fd', primary: '#50c8f0', dark: '#004d6b', mid: '#007aa0', badge: '#a8e4f8' }, // cyan
-    { bg: '#fefae8', primary: '#f0d050', dark: '#6b4e00', mid: '#a07800', badge: '#f8eba8' }, // yellow
-    { bg: '#fdf0ed', primary: '#f07050', dark: '#7a2000', mid: '#b83800', badge: '#f8c4b8' }, // red-orange
-    { bg: '#f5eeff', primary: '#a855f7', dark: '#4a0080', mid: '#7200bf', badge: '#dbb8fd' }, // purple
-    { bg: '#eef0ff', primary: '#b0c0ff', dark: '#1a2880', mid: '#3040c0', badge: '#d0d8ff' }, // periwinkle
-    { bg: '#f0f2f8', primary: '#7a88b0', dark: '#1e2a45', mid: '#3a4a70', badge: '#c0c8e0' }, // slate
+    { bg: '#4d7cfe', primary: '#3a6ae8', dark: '#ffffff', mid: '#e8eeff', badge: '#3a6ae8' }, // blue
+    { bg: '#f0a050', primary: '#d4823a', dark: '#ffffff', mid: '#fff0e0', badge: '#d4823a' }, // orange
+    { bg: '#3dd68c', primary: '#28b872', dark: '#ffffff', mid: '#e0fff0', badge: '#28b872' }, // green
+    { bg: '#f05090', primary: '#d4306e', dark: '#ffffff', mid: '#ffe0f0', badge: '#d4306e' }, // pink
+    { bg: '#50c8f0', primary: '#30aad4', dark: '#1a4a5a', mid: '#1a4a5a', badge: '#30aad4' }, // cyan
+    { bg: '#f0d050', primary: '#d4b030', dark: '#4a3a00', mid: '#4a3a00', badge: '#d4b030' }, // yellow
+    { bg: '#f07050', primary: '#d4503a', dark: '#ffffff', mid: '#ffe8e0', badge: '#d4503a' }, // red-orange
+    { bg: '#a855f7', primary: '#8e35e0', dark: '#ffffff', mid: '#f0e0ff', badge: '#8e35e0' }, // purple
+    { bg: '#b0c0ff', primary: '#8090e0', dark: '#1a2460', mid: '#1a2460', badge: '#8090e0' }, // periwinkle
+    { bg: '#7a88b0', primary: '#5a6890', dark: '#ffffff', mid: '#e8eaf4', badge: '#5a6890' }, // slate
 ];
 const TRONC_COLORS = OPTION_COLORS[0];
 
@@ -152,7 +152,7 @@ function populateState(program_state, program_data) {
     // Courses
     program_state.courseData = program_data.courses
 
-    // ── Options — dict keyed by opt.id ──
+    // ── Options — add palette to the options
     program_state.optionData = {};
     program_data.options.forEach((opt, i) => {
         let palette;
@@ -396,6 +396,7 @@ function buildProgramGrid() {
 
     container.innerHTML = `
     <div id="grid-view" class="hidden">
+        
       <div class="year-grid">
         ${[1, 2].map(year => [1, 2].map(sem => `
           <div class="grid-col">
@@ -404,22 +405,24 @@ function buildProgramGrid() {
           </div>
         `).join('')).join('')}
       </div>
-    </div>`;
+
+    </div>
+    <div class="other-courses-grid">Other courses</div>`;
 
     Array.from(program_state.selected_courses)
         .map(code => program_state.courseData[code])
         .filter(Boolean)
         .forEach(c => {
-            const col = container.querySelector(
-                `.grid-col-courses[data-year="${c.years}"][data-semester="${c.semester}"]`
-            );
-            if (!col) return;
 
             const palette = getCourseColorPalette(program_state, c.code);
             const card = document.createElement('div');
             card.className = `course-card`;
             card.style.setProperty('--card-bg', palette.bg);
             card.style.setProperty('--card-border', palette.primary);
+            card.style.setProperty('--card-text-dark', palette.dark);
+            card.style.setProperty('--card-text-mid', palette.dark);
+            card.style.setProperty('--card-badge-bg', palette.badge);
+            card.style.setProperty('--ects', c.ects);
             card.style.setProperty('--ects', c.ects);
             card.innerHTML = `
                 <div class="course-card-title">${c.title}</div>
@@ -428,7 +431,21 @@ function buildProgramGrid() {
                     <span class="course-card-lang">${c.lang}</span>
                     <span class="course-card-ects">${c.ects} ECTS</span>
                 </div>`;
-            col.appendChild(card);
+            console.log(c)
+            let grid;
+            if (c.years === 3) {
+                grid = container.querySelector(".other-courses-grid")
+            } else if (c.semester === 3) {
+                grid = container.querySelector(
+                    `.grid-col-courses[data-year="${c.years}"][data-semester="1"]`)
+                if (!grid) return;
+
+            } else {
+                grid = container.querySelector(
+                    `.grid-col-courses[data-year="${c.years}"][data-semester="${c.semester}"]`)
+                if (!grid) return;
+            }
+            grid.appendChild(card);
         });
 }
 

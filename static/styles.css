@@ -439,13 +439,14 @@ header .ects-total strong {
     flex: 1;
     overflow-y: auto;
     padding: 6px;
+    gap: 6px;
 }
 
 .course-card {
     --ects: 5;
     width: 100%;
     box-sizing: border-box;
-    border-radius: var(--border-radius-md);
+    border-radius: var(--border-radius-lg);
     border: 0.5px solid var(--card-border);
     background: var(--card-bg);
     padding: 8px 10px;
@@ -459,7 +460,7 @@ header .ects-total strong {
 .course-card-title {
     font-size: 11px;
     font-weight: 500;
-    color: var(--card-text-dark);
+    color: var(--card-text-mid)
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -490,21 +491,6 @@ header .ects-total strong {
     color: var(--card-text-mid);
 }
 
-.course-card.option-a {
-    --card-bg: #E6F1FB;
-    --card-border: #85B7EB;
-    --card-text-dark: #0C447C;
-    --card-text-mid: #185FA5;
-    --card-badge-bg: #B5D4F4;
-}
-
-.course-card.option-b {
-    --card-bg: #EAF3DE;
-    --card-border: #97C459;
-    --card-text-dark: #27500A;
-    --card-text-mid: #3B6D11;
-    --card-badge-bg: #C0DD97;
-}
 /* ── RIGHT: CONSTRAINTS + RADAR ── */
 #panel-constraints {
   overflow-y: auto;

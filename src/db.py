@@ -3,9 +3,7 @@ import sqlite3
 
 def get_db():
     conn = sqlite3.connect("database.db")
-    conn.row_factory = (
-        sqlite3.Row
-    )  # rows behave like dicts: row['label'] instead of row[0]
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -22,13 +20,12 @@ def get_all_programs():
 def get_program(program_id: int) -> dict | None:
     conn = get_db()
 
-    # ── 1. Fetch the program row ──────────────────────────────────────────────
-    program = conn.execute(
+    program_row = conn.execute(
         "SELECT * FROM programs WHERE id = ?", (program_id,)
     ).fetchone()
 
-    if program is None:
-        return None
+    if program_row is None:
+        raise Exception("Could not find program in database")
 
     tronc_commun_courses = conn.execute(
         """
@@ -82,13 +79,13 @@ def get_program(program_id: int) -> dict | None:
     ).fetchall()
     conn.close()
 
-    # ── 4. Build the tree in Python ───────────────────────────────────────────
-    return build_tree(
-        program, tronc_commun_courses, option_rows, course_rows, prof_rows
+    # After fetching all data, we put it in a dict exploitable by the front-end
+    return build_program(
+        program_row, tronc_commun_courses, option_rows, course_rows, prof_rows
     )
 
 
-def build_tree(program, tronc_rows, option_rows, course_rows, prof_rows) -> dict:
+def build_program(program_row, tronc_rows, option_rows, course_rows, prof_rows) -> dict:
 
     # Index option courses by option_id for quick lookup
     # { option_id: [course, course, ...] }
@@ -173,9 +170,9 @@ def build_tree(program, tronc_rows, option_rows, course_rows, prof_rows) -> dict
     options.insert(0, tronc_commun)
 
     return {
-        "id": program["id"],
-        "title": program["title"],
-        "total_ects": program["total_ects"],
+        "id": program_row["id"],
+        "title": program_row["title"],
+        "total_ects": program_row["total_ects"],
         "courses": courses,  # dict keyed by code
         "options": options,  # list of options, each with a courses list
         "professors": professors,

@@ -66,11 +66,6 @@ CREATE TABLE IF NOT EXISTS option_courses (
     PRIMARY KEY (option_id, course_id)
 );
 
-
-CREATE TABLE IF NOT EXISTS metadata (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
 """
 
 
@@ -86,16 +81,15 @@ def is_seed_needed(cursor: sqlite3.Cursor, program_title: str) -> bool:
     Returns True if the program needs seeding, False if it is still fresh.
     A program is considered stale after one year.
     """
-    row = cursor.execute(
+    response = cursor.execute(
         "SELECT last_seeded_at FROM programs WHERE title = ?", (program_title,)
     ).fetchone()
 
-    # Program does not exist yet — seed needed
-    if row is None or row["last_seeded_at"] is None:
+    if response is None:
         return True
 
-    last_seeded = datetime.fromisoformat(row["last_seeded_at"])
-    age = datetime.now(timezone.utc) - last_seeded
+    last_seeded = datetime.fromisoformat(response[0])
+    age = datetime.now() - last_seeded
 
     return age > timedelta(days=365)
 
@@ -107,37 +101,23 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
     if not is_seed_needed(cursor, program["title"]):
         last = cursor.execute(
             "SELECT last_seeded_at FROM programs WHERE title = ?", (program["title"],)
-        ).fetchone()["last_seeded_at"]
+        ).fetchone()[0]
         print(f"'{program['title']}' is up to date (seeded at {last}). Skipping.")
         return
 
     seeded_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
 
     try:
-        existing = cursor.execute(
-            "SELECT id FROM programs WHERE title = ?", (program["title"],)
-        ).fetchone()
-
-        if existing:
-            print(f"'{program['title']}' is stale, replacing...")
-            delete_program(cursor, existing[0])
-
         cursor.execute(
             "INSERT INTO programs (title, total_ects, last_seeded_at) VALUES (?, ?, ?)",
             (program["title"], program["total_ects"], seeded_at),
         )
         program_id = cursor.lastrowid
 
-        # INSERT TRONC COMMUN
         insert_tronc_commun(cursor, program["tronc_commun"], program_id)
-        # INSERT OPTIONS
-        for position, option in enumerate(program["options"]):
-            insert_option(cursor, option, program_id, parent_id=None, position=position)
 
-        cursor.execute(
-            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('last_seeded_at', ?)",
-            (seeded_at,),
-        )
+        for position, option in enumerate(program["options"]):
+            insert_option(cursor, option, program_id, position=position)
 
         conn.commit()
         print(f"Seeded '{program['title']}' at {seeded_at}.")
@@ -147,38 +127,8 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
         raise e
 
 
-def delete_program(cursor: sqlite3.Cursor, program_id: int) -> None:
-    """
-    Deletes a program and all its dependent rows in the right order.
-    You must delete children before parents to respect foreign key constraints.
-    """
-
-    # Find all option ids belonging to this program
-    option_ids = [
-        row[0]
-        for row in cursor.execute(
-            "SELECT id FROM options WHERE program_id = ?", (program_id,)
-        ).fetchall()
-    ]
-
-    if option_ids:
-        # SQLite doesn't support WHERE IN with a list natively,
-        # so we build the placeholders dynamically.
-        placeholders = ",".join("?" * len(option_ids))
-
-        cursor.execute(
-            f"DELETE FROM option_courses WHERE option_id IN ({placeholders})",
-            option_ids,
-        )
-
-    cursor.execute("DELETE FROM options WHERE program_id = ?", (program_id,))
-    cursor.execute("DELETE FROM programs WHERE id = ?", (program_id,))
-
-
 def insert_tronc_commun(cursor: sqlite3.Cursor, courses: list, program_id: int):
-    """
-    Inserts the "tronc commun" for a program, linking via tronc_courses
-    """
+
     for course in courses:
         pos = course["position"]
         course_db_id = insert_or_get_course(cursor, course)
@@ -195,7 +145,6 @@ def insert_option(
     cursor: sqlite3.Cursor,
     option: dict,
     program_id: int,
-    parent_id: int | None,
     position: int,
 ) -> None:
     """
@@ -288,7 +237,6 @@ def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
 
 
 if __name__ == "__main__":
-    os.remove("database.db")
     conn = sqlite3.connect("database.db")
 
     init_db(conn)
