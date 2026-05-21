@@ -43,8 +43,6 @@ def parse_program(master_code, url):
             "Could not find root ul.cafo_lu — has the page structure changed?"
         )
 
-    # Each direct li child of the root ul is a top-level section
-    # (e.g. Tronc commun, Finalité, Options).
     top_level_lis = root_ul.find_all("li", class_="list-group-item", recursive=False)
 
     tronc_courses = []
@@ -56,9 +54,10 @@ def parse_program(master_code, url):
 
         if "tronc_commun" in section_id:
             new_courses = extract_courses(content_div)
-            tronc_courses = add_courses(new_courses, tronc_courses)
+            for course in new_courses:
+                tronc_courses.append(course)
         else:
-            collect_options(content_div, section_id, options)
+            collect_options(content_div, section_id, label, options)
     final_dict = {
         "title": master_code,
         "total_ects": 120,
@@ -68,44 +67,35 @@ def parse_program(master_code, url):
     return final_dict
 
 
-def collect_options(container, parent_id: str, options: list) -> None:
-    """
-    Walks a container and appends leaf options to the options list.
-    Sub-options are flattened — only leaves (sections with actual courses) are kept.
-    The parent grouping label is preserved as group_label for UI display only.
-    """
+def collect_options(
+    container, section_id: str, group_label: str, options: list
+) -> None:
+
     nested_ul = container.find("ul", class_="cafo_lu")
 
     if nested_ul is None:
-        # This is a leaf — it has courses directly, so it's a real option
-        courses = extract_courses(container)
-        if courses:  # ignore empty sections
-            label, section_id = extract_label(
-                container.find_parent("li", class_="list-group-item")
-            )
+        courses, _ = extract_courses(container)
+        if courses:
             options.append(
                 {
                     "html_id": section_id,
-                    "label": label,
-                    "group_label": None,  # filled in by the caller when recursing
+                    "label": group_label,
+                    "group_label": None,
                     "courses": courses,
                 }
             )
     else:
-        # This is a grouping node — recurse into its children
-        # Pass the current label down as group_label for the leaves
-        group_label, _ = extract_label(
-            container.find_parent("li", class_="list-group-item")
-        )
+        # Grouping node — current label becomes the group_label for children
         child_lis = nested_ul.find_all("li", class_="list-group-item", recursive=False)
         for child_li in child_lis:
             child_label, child_id = extract_label(child_li)
             child_content = find_content_div(child_li, child_id)
-            # Recurse, but inject the group label before appending
+
             child_options = []
-            collect_options(child_content, child_id, child_options)
+            collect_options(child_content, child_id, child_label, child_options)
+
             for opt in child_options:
-                if opt["group_label"] is None:  # don't overwrite a deeper group label
+                if opt["group_label"] is None:
                     opt["group_label"] = group_label
             options.extend(child_options)
 
@@ -133,10 +123,10 @@ def extract_label(li: Tag) -> tuple[str, str]:
     for noise in title_div.find_all(["svg", "span"], id=re.compile(r"link_copy")):
         noise.decompose()
 
-    raw = title_div.get_text(separator=" ")
-    clean = re.sub(r"\s+", " ", raw).strip()
+    raw_label = title_div.get_text(separator=" ")
+    clean_label = re.sub(r"\s+", " ", raw_label).strip()
 
-    return (clean, section_id)
+    return (clean_label, section_id)
 
 
 def find_content_div(li: Tag, section_id: str) -> Tag:
@@ -154,18 +144,11 @@ def find_content_div(li: Tag, section_id: str) -> Tag:
     return content_div if content_div else li
 
 
-def add_courses(courses, option_course_list):
-    for course in courses:
-        option_course_list.append(course)
-    return option_course_list
-
-
 def extract_courses(container):
     courses = []
-    position = 0
     seen_codes = set([])
 
-    for row in container.find_all("div", class_="row"):
+    for pos, row in enumerate(container.find_all("div", class_="row")):
         link = row.find("a", href=re.compile(r"cours-\d{4}-"))
         if link is None:
             continue
@@ -260,18 +243,8 @@ def extract_courses(container):
                 "teachers": teachers,
                 # data for options
                 "mandatory": mandatory,
-                "position": position,
+                "position": pos,
             }
         )
-        position += 1
 
     return courses
-
-
-def parse_all_programs():
-    urls = parse_program_list()
-    if urls is None:
-        print("Problem fetching programs list")
-    else:
-        for code, url in urls.items():
-            parse_program(code, url)
