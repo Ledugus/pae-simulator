@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAElla— Composition de programme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/base.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/catalogue.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/constraints.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/layout.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/panel.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/program.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/toast.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', path='/css/tooltip.css') }}" rel="stylesheet">
 </head>
 <body>
 
@@ -98,6 +105,17 @@
 <div class="tooltip" id="tooltip"></div>
 </div>
 <div id="toast-container"></div>
-        <script src="{{ url_for('static', path='/index.js') }}"></script>
+<script src="/static/js/config.js"></script>
+<script src="/static/js/state.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/helpers.js"></script>
+<script src="/static/js/ui/toast.js"></script>
+<script src="/static/js/ui/tooltip.js"></script>
+<script src="/static/js/selection.js"></script>
+<script src="/static/js/ui/catalogue.js"></script>
+<script src="/static/js/ui/program.js"></script>
+<script src="/static/js/ui/constraints.js"></script>
+<script src="/static/js/ui/radar.js"></script>
+<script src="/static/js/app.js"></script>
 </body>
 

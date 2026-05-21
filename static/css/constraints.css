@@ -1,0 +1,86 @@
+#panel-constraints {
+  overflow-y: auto;
+}
+
+.radar-wrap {
+  padding: 16px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.radar-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  align-self: flex-start;
+}
+#radar-svg { display: block; }
+
+.constraints-list {
+  padding: 12px 16px;
+}
+.constraint-item {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+.constraint-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.constraint-status {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.constraint-bar-wrap {
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.constraint-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .3s;
+}
+.constraint-numbers {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex; justify-content: space-between;
+}
+
+/* Total ECTS big display */
+.total-ects-display {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.total-ects-ring {
+  position: relative;
+  width: 100px; height: 100px;
+  margin: 0 auto 8px;
+}
+#ring-svg { display: block; }
+.ring-text {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.ring-text .big {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--text);
+  line-height: 1;
+  display: block;
+}
+.ring-text .small {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}

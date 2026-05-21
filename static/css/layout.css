@@ -1,0 +1,65 @@
+
+[hidden] { display: none !important; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 360px 1fr 300px;
+}
+
+/* ── TOP BAR ── */
+header {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+}
+header .logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+header .logo span { color: var(--accent2); font-style: italic; }
+header .sep { flex: 1; }
+header .ects-total {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+header .ects-total strong {
+  color: var(--text);
+  font-size: 17px;
+}
+#ui-ready {
+  display: contents;
+}
+#ui-loading,
+#ui-error {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.program-course-item {
+  animation: fadeIn .2s ease;
+}

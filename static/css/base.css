@@ -1,0 +1,22 @@
+[hidden] { display: none !important; }
+:root {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface2: #1f2435;
+  --border: #2a3050;
+  --border2: #3a4468;
+  --text: #e8ecf5;
+  --text-dim: #7a88b0;
+  --text-muted: #4a5578;
+  --accent: #4d7cfe;
+  --accent2: #6d9bff;
+  --green: #3dd68c;
+  --green-dim: #1a4a35;
+  --orange: #f0a050;
+  --orange-dim: #3a2a10;
+  --red: #f05050;
+  --red-dim: #3a1010;
+  --yellow: #f0d050;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
