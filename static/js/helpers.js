@@ -11,9 +11,9 @@
  * Assigns palette colours to each option.
  */
 function populateState(program_state, program_data) {
-    program_state.courseData  = program_data.courses;
-    program_state.total_ects  = program_data.total_ects;
-    program_state.optionData  = {};
+    program_state.courseData = program_data.courses;
+    program_state.total_ects = program_data.total_ects;
+    program_state.optionData = {};
 
     program_data.options.forEach((opt, i) => {
         const palette = opt.id === 'tronc'
@@ -72,7 +72,7 @@ function getEctsByOption(program_state) {
     Object.values(program_state.optionData).forEach(o => counts[o.id] = 0);
 
     program_state.selected_courses.forEach(code => {
-        const ects   = program_state.courseData[code]?.ects || 0;
+        const ects = program_state.courseData[code]?.ects || 0;
         const optIds = program_state.courseOptions[code] || [];
         optIds.forEach(optId => {
             counts[optId] = (counts[optId] || 0) + ects;
@@ -87,7 +87,7 @@ function getEctsByOption(program_state) {
  */
 function groupOptionsByGroupLabel(options) {
     const result = [];
-    const seen   = {};
+    const seen = {};
     options.forEach(opt => {
         const key = opt.group_label || '__ungrouped__';
         if (!seen[key]) {
@@ -97,4 +97,17 @@ function groupOptionsByGroupLabel(options) {
         seen[key].options.push(opt);
     });
     return result;
+}
+
+
+function getBlocsFromYears(years) {
+    if (years === "1") {
+        return "Bloc 1"
+    }
+    if (years === "2") {
+        return "Bloc 2"
+    }
+    if (years === "12") {
+        return "Blocs 1 & 2"
+    }
 }

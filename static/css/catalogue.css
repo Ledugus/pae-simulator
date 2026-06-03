@@ -169,14 +169,16 @@
   color: var(--text-muted);
   letter-spacing: 0.05em;
 }
-.course-title {
+.course-title-wrapper {
     display: block;
-    font-size: 12px;
-    color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.4;
+}
+.course-title {
+    font-size: 12px;
+    color: var(--text);
     text-decoration: none;
 }
 

@@ -74,7 +74,7 @@ def collect_options(
     nested_ul = container.find("ul", class_="cafo_lu")
 
     if nested_ul is None:
-        courses, _ = extract_courses(container)
+        courses = extract_courses(container)
         if courses:
             options.append(
                 {
@@ -170,9 +170,9 @@ def extract_courses(container):
 
         # ── RIGHT COLUMN ─────────────────────────────────────────
         lang = None
-        semester = 0
+        semester = []
         hours = None
-        blocs = []
+        years = ""
         friendly = False
         teachers = []
 
@@ -182,23 +182,21 @@ def extract_courses(container):
             if lang_code:
                 lang = lang_code.get_text(strip=True)
 
-            # Blocs — 1, 2, 3 meaning both, None = not found
-            bloc_imgs = right.find_all("img", title=re.compile(r"bloc annuel"))
-            if len(bloc_imgs) >= 2:
-                blocs = 3  # appears in both blocs
-            elif len(bloc_imgs) == 1:
-                m = re.search(r"(\d+)", bloc_imgs[0]["title"])
-                blocs = int(m.group(1)) if m else None
-            else:
-                blocs = None  # no info — treat as both
+            # Blocs — 1, 2, 12 meaning both, None = not found
+            year_1_imgs = right.find_all("img", title="1er bloc annuel")
+            year_2_imgs = right.find_all("img", title="2e bloc annuel")
+            if len(year_1_imgs) > 0:
+                years += "1"
+            if len(year_2_imgs) > 0:
+                years += "2"
 
             # Semester — 1, 2, 3 meaning both, None = not found
             for span in right.find_all("span", recursive=False):
                 t = span.get_text(strip=True)
                 if "q1" in t:
-                    semester += 1  # 'q1' -> 1, 'q2' -> 2
+                    semester.append("1")
                 if "q2" in t:
-                    semester += 2
+                    semester.append("2")
 
             # Hours — sum of all numeric hour values found in the span
             hours = None
@@ -236,12 +234,12 @@ def extract_courses(container):
                 "title": title,
                 "ects": ects,
                 "lang": lang,
-                "semester": semester,
+                "semester": "".join(semester),
                 "hours": hours,
-                "years": blocs,
                 "friendly": friendly,
                 "teachers": teachers,
                 # data for options
+                "years": years,
                 "mandatory": mandatory,
                 "position": pos,
             }

@@ -29,7 +29,7 @@ def get_program(program_id: int) -> dict | None:
 
     tronc_commun_courses = conn.execute(
         """
-        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.years, c.friendly, tc.position, tc.mandatory
+        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.friendly, tc.years, tc.position, tc.mandatory
         FROM courses c
         JOIN tronc_courses tc ON tc.course_id = c.id
         WHERE tc.program_id = ?
@@ -50,7 +50,7 @@ def get_program(program_id: int) -> dict | None:
 
     course_rows = conn.execute(
         """
-        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.years, c.friendly, oc.option_id, oc.position, oc.mandatory
+        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.friendly, oc.option_id, oc.years, oc.position, oc.mandatory
         FROM courses c
         JOIN option_courses oc ON oc.course_id = c.id
         JOIN options o ON o.id = oc.option_id

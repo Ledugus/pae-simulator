@@ -27,9 +27,8 @@ CREATE TABLE IF NOT EXISTS courses (
     title TEXT    NOT NULL,
     ects  INTEGER,
     lang  TEXT,
-    semester INTEGER,
+    semester TEXT,
     hours  INTEGER,
-    years  INTEGER,
     friendly INTEGER
 );
 
@@ -53,6 +52,7 @@ CREATE TABLE IF NOT EXISTS prerequisites (
 CREATE TABLE IF NOT EXISTS tronc_courses (
     program_id  INTEGER NOT NULL REFERENCES programs(id),
     course_id   INTEGER NOT NULL REFERENCES courses(id),
+    years  TEXT,
     position    INTEGER NOT NULL,
     mandatory   INTEGER NOT NULL DEFAULT 0, 
     PRIMARY KEY (program_id, course_id)
@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS tronc_courses (
 CREATE TABLE IF NOT EXISTS option_courses (
     option_id   INTEGER NOT NULL REFERENCES option(id),
     course_id   INTEGER NOT NULL REFERENCES courses(id),
+    years  TEXT,
     position    INTEGER NOT NULL,   -- preserves ordering within an option 
     mandatory   INTEGER NOT NULL DEFAULT 0, -- 1 = mandatory
     PRIMARY KEY (option_id, course_id)
@@ -134,10 +135,10 @@ def insert_tronc_commun(cursor: sqlite3.Cursor, courses: list, program_id: int):
         course_db_id = insert_or_get_course(cursor, course)
         cursor.execute(
             """
-            INSERT OR IGNORE INTO tronc_courses (program_id, course_id, position)
-            VALUES(?, ?, ?)
+            INSERT OR IGNORE INTO tronc_courses (program_id, course_id, years, position)
+            VALUES(?, ?, ?, ?)
             """,
-            (program_id, course_db_id, pos),
+            (program_id, course_db_id, course["years"], pos),
         )
 
 
@@ -171,10 +172,16 @@ def insert_option(
         course_db_id = insert_or_get_course(cursor, course)
         cursor.execute(
             """
-            INSERT OR IGNORE INTO option_courses (option_id, course_id, position, mandatory)
-            VALUES (?, ?, ?, ?)
+            INSERT OR IGNORE INTO option_courses (option_id, course_id, years, position, mandatory)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (option_db_id, course_db_id, course["position"], course["mandatory"]),
+            (
+                option_db_id,
+                course_db_id,
+                course["years"],
+                course["position"],
+                course["mandatory"],
+            ),
         )
 
 
@@ -188,8 +195,8 @@ def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
     """
     cursor.execute(
         """
-        INSERT INTO courses (code, title, ects, lang, semester, hours, years, friendly)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO courses (code, title, ects, lang, semester, hours, friendly)
+        VALUES (?, ?, ?, ?, ?, ?,  ?)
         ON CONFLICT(code) DO NOTHING
         """,
         (
@@ -199,7 +206,6 @@ def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
             course.get("lang"),
             course.get("semester"),
             course.get("hours"),
-            course.get("years"),
             course.get("friendly"),
         ),
     )

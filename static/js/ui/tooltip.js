@@ -12,16 +12,16 @@ function showTooltip(e, c) {
     tip.innerHTML = `
         <strong style="color:var(--text)">${c.title}</strong><br>
         <span style="color:var(--text-muted)">${c.code}</span><br>
-        ${c.hours   ? `<span>${c.hours}h</span> &nbsp;`                          : ''}
-        ${c.ects    ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
-        ${c.years?.length ? `&nbsp;Bloc ${c.years.join(',')}`                    : ''}`;
+        ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
+        ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
+        ${c.years ? `&nbsp;${getBlocsFromYears(c.years)}` : ''}`;
     moveTooltip(e);
 }
 
 function moveTooltip(e) {
     const tip = document.getElementById('tooltip');
     tip.style.left = `${e.clientX + 14}px`;
-    tip.style.top  = `${e.clientY - 10}px`;
+    tip.style.top = `${e.clientY - 10}px`;
 }
 
 function hideTooltip() {

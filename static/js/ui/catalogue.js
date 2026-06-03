@@ -11,7 +11,7 @@ function buildCourseCatalogue(program_state) {
     container.innerHTML = '';
 
     // ── Tronc commun block (no checkbox — always selected) ──
-    const troncEl  = document.createElement('div');
+    const troncEl = document.createElement('div');
     troncEl.className = 'section-group';
 
     const troncHdr = document.createElement('div');
@@ -86,36 +86,38 @@ function renderCourseList(container, courses, palette) {
 
     courses.forEach(c => {
         const isMandatory = !!c.mandatory;
-        const course      = program_state.courseData[c.code];
+        const course = program_state.courseData[c.code];
         if (!course) return;
 
         const row = document.createElement('div');
-        row.className        = 'course-row';
-        row.dataset.code     = course.code;
-        row.dataset.lang     = course.lang     || '';
+        row.className = 'course-row';
+        row.dataset.code = course.code;
+        row.dataset.lang = course.lang || '';
         row.dataset.semester = course.semester || '';
-        row.dataset.ects     = course.ects     || 0;
+        row.dataset.ects = course.ects || 0;
 
-        if (isMandatory)                              row.classList.add('mandatory');
+        if (isMandatory) row.classList.add('mandatory');
         if (program_state.selected_courses.has(course.code)) row.classList.add('selected');
 
         row.innerHTML = `
             <div class="check">${program_state.selected_courses.has(course.code) ? '✓' : ''}</div>
             <div class="course-info">
                 <div class="course-code">${course.code}</div>
+                <div class="course-title-wrapper">
                 <a class="course-title"
                    href="https://uclouvain.be/cours-2026-${course.code.toLowerCase()}"
-                   target="_blank">${course.title}</a>
+               target="_blank">${course.title}</a>
+            </div>
             </div>
             <div class="course-meta">
-                ${course.ects     ? `<span class="badge badge-ects">${course.ects}</span>`     : ''}
-                ${course.lang     ? `<span class="badge badge-lang">${course.lang}</span>`     : ''}
-                ${course.semester ? `<span class="badge badge-q">${course.semester}</span>`    : ''}
+                ${course.ects ? `<span class="badge badge-ects">${course.ects}</span>` : ''}
+                ${course.lang ? `<span class="badge badge-lang">${course.lang}</span>` : ''}
+                ${course.semester ? `<span class="badge badge-q">Q${course.semester.split("").join("+")}</span>` : ''}
             </div>`;
 
-        row.addEventListener('click',       ()  => toggleCourse(course.code));
-        row.addEventListener('mouseenter',  e   => showTooltip(e, course));
-        row.addEventListener('mouseleave',  ()  => hideTooltip());
+        row.addEventListener('click', () => toggleCourse(course.code));
+        row.addEventListener('mouseenter', e => showTooltip(e, course));
+        row.addEventListener('mouseleave', () => hideTooltip());
 
         container.appendChild(row);
     });
@@ -139,9 +141,9 @@ function applyFilters() {
             f === 'all' ||
             (f === 'EN' && course.lang === 'EN') ||
             (f === 'FR' && course.lang === 'FR') ||
-            (f === 'q1' && course.semester % 2 === 1) ||
-            (f === 'q2' && course.semester - 2 >= 0) ||
-            (f === '5'  && course.ects === 5)
+            (f === 'q1' && course.semester.includes("1")) ||
+            (f === 'q2' && course.semester.includes("2")) ||
+            (f === '5' && course.ects === 5)
         );
         const searchOk = !q
             || course.title.toLowerCase().includes(q)
@@ -197,7 +199,7 @@ function restoreFilterUI(program_state) {
     const input = document.getElementById('search-input');
     const clear = document.getElementById('search-clear');
     if (input) {
-        input.value         = program_state.searchQuery;
+        input.value = program_state.searchQuery;
         clear.style.display = program_state.searchQuery ? 'block' : 'none';
     }
 }

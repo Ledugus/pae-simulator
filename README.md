@@ -10,6 +10,10 @@ Choississez un programme de Master parmi ceux proposés dans l'onglets "Programm
 ## TODO:
 Scraping : 
 - Scrape prérequis
+- Scrape API de l'horaire
+
+Database : 
+- Cleaner le format du tronc commun → migrer vers une structure d'option unifiée
 
 Logique de validation : 
 - ajouter les règles de validation des options (=cours obligatoire + minimum ects)
@@ -18,8 +22,9 @@ Logique de validation :
 UI : 
 - Texte de la toile d'araignée
 - Panels ajustables
-- Liens cliquables pour les cours
 - Arrangement des cours choisis selon le quadri
+- Ajouter widget de remplissage des options sélectionnées
+- Ajouter un widget de prévisualisation de l'horaire
 
 Collab : 
 - Faire la repo github

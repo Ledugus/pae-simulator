@@ -103,10 +103,10 @@ function buildProgramGrid(program_state) {
 
             const card = document.createElement('div');
             card.className = 'course-card';
-            card.style.setProperty('--card-bg',        palette.bg);
-            card.style.setProperty('--card-border',    palette.primary);
+            card.style.setProperty('--card-bg', palette.bg);
+            card.style.setProperty('--card-border', palette.primary);
             card.style.setProperty('--card-text-dark', palette.dark);
-            card.style.setProperty('--card-badge-bg',  palette.badge);
+            card.style.setProperty('--card-badge-bg', palette.badge);
             card.innerHTML = `
                 <div class="course-card-title">${c.title}</div>
                 <div class="course-card-code">${c.code}</div>
@@ -116,9 +116,9 @@ function buildProgramGrid(program_state) {
                 </div>`;
 
             let grid;
-            if (!c.years || c.years === 3) {
+            if (!c.years || c.years === "12") {
                 grid = container.querySelector('.other-courses-grid');
-            } else if (!c.semester || c.semester === 3) {
+            } else if (!c.semester || c.semester === "12") {
                 // Both semesters — place in Q1 column for that year
                 grid = container.querySelector(
                     `.grid-col-courses[data-year="${c.years}"][data-semester="1"]`);
