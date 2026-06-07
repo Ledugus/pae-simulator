@@ -91,6 +91,7 @@ async function loadProgram(program_id) {
 
 function buildPageOfProgram(program_state) {
     if (program_state.selected_options.size === 0) autoSelectTroncCommun(program_state);
+
     buildCourseCatalogue(program_state);
     buildProgramView(program_state);
     buildConstraints(program_state);
@@ -120,6 +121,14 @@ function updateAll() {
         option.classList.toggle('selected', sel);
         if (option.querySelector('.check')) option.querySelector('.check').textContent = sel ? '✓' : '';
     });
+
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        if (program_state.activeView === btn.dataset.view) {
+            btn.classList.add('active');
+        }
+
+    })
 
     buildProgramView(program_state);
     buildConstraints(program_state);
