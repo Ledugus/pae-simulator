@@ -27,17 +27,6 @@ def get_program(program_id: int) -> dict | None:
     if program_row is None:
         raise Exception("Could not find program in database")
 
-    tronc_commun_courses = conn.execute(
-        """
-        SELECT c.id, c.code, c.title, c.ects, c.lang, c.semester, c.hours, c.friendly, tc.years, tc.position, tc.mandatory
-        FROM courses c
-        JOIN tronc_courses tc ON tc.course_id = c.id
-        WHERE tc.program_id = ?
-        ORDER BY tc.position
-        """,
-        (program_id,),
-    ).fetchall()
-
     option_rows = conn.execute(
         """
         SELECT id, html_id, label, group_label, position
@@ -67,43 +56,24 @@ def get_program(program_id: int) -> dict | None:
         JOIN teaching t ON t.prof_id = p.id
         JOIN courses c ON c.id = t.course_id
         WHERE c.id IN (
-            SELECT course_id FROM tronc_courses WHERE program_id = ?
-            UNION
             SELECT oc.course_id FROM option_courses oc
             JOIN options o ON o.id = oc.option_id
             WHERE o.program_id = ?
         )
         ORDER BY c.code
         """,
-        (program_id, program_id),
+        (program_id,),
     ).fetchall()
     conn.close()
 
-    # After fetching all data, we put it in a dict exploitable by the front-end
-    return build_program(
-        program_row, tronc_commun_courses, option_rows, course_rows, prof_rows
-    )
+    return build_program(program_row, option_rows, course_rows, prof_rows)
 
 
-def build_program(program_row, tronc_rows, option_rows, course_rows, prof_rows) -> dict:
+def build_program(program_row, option_rows, course_rows, prof_rows) -> dict:
 
     # Index option courses by option_id for quick lookup
     # { option_id: [course, course, ...] }
     courses = {}
-
-    for row in tronc_rows:
-        courses[row["code"]] = {
-            "id": row["id"],
-            "code": row["code"],
-            "title": row["title"],
-            "ects": row["ects"],
-            "lang": row["lang"],
-            "semester": row["semester"],
-            "hours": row["hours"],
-            "years": row["years"],
-            "friendly": bool(row["friendly"]),
-            "teachers": [],
-        }
 
     for row in course_rows:
         if row["code"] not in courses:
@@ -119,24 +89,6 @@ def build_program(program_row, tronc_rows, option_rows, course_rows, prof_rows) 
                 "friendly": bool(row["friendly"]),
                 "teachers": [],
             }
-
-    # ── Tronc commun — relationship data only, course data lives in courses ──
-
-    tronc_commun_courses = [
-        {
-            "code": row["code"],
-            "mandatory": bool(row["mandatory"]),
-            "position": row["position"],
-        }
-        for row in tronc_rows
-    ]
-    tronc_commun = {
-        "id": "tronc",
-        "html_id": "tronc",
-        "label": "Tronc Commun",
-        "group_label": None,
-        "courses": tronc_commun_courses,
-    }
 
     # ── Options — index course rows by option_id first ──
     courses_by_option = {}
@@ -167,7 +119,6 @@ def build_program(program_row, tronc_rows, option_rows, course_rows, prof_rows) 
         }
         for row in option_rows
     ]
-    options.insert(0, tronc_commun)
 
     return {
         "id": program_row["id"],

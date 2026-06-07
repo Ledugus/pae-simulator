@@ -29,8 +29,8 @@ async function init() {
 
 function setLoadingState(status, message = '') {
     document.getElementById('ui-loading').hidden = status !== 'loading';
-    document.getElementById('ui-error').hidden   = status !== 'error';
-    document.getElementById('ui-ready').hidden   = status !== 'ready';
+    document.getElementById('ui-error').hidden = status !== 'error';
+    document.getElementById('ui-ready').hidden = status !== 'ready';
     if (status === 'error') {
         document.getElementById('error-message').textContent = message;
     }
@@ -43,16 +43,16 @@ function buildProgramSelector(allPrograms) {
     container.innerHTML = '';
 
     const defaultOpt = document.createElement('option');
-    defaultOpt.id        = 'program-selector-default-option';
+    defaultOpt.id = 'program-selector-default-option';
     defaultOpt.className = 'program-selector-option';
-    defaultOpt.value     = 0;
+    defaultOpt.value = 0;
     defaultOpt.textContent = 'Choose your master program';
     container.appendChild(defaultOpt);
 
     Object.values(allPrograms).forEach(program => {
         const opt = document.createElement('option');
-        opt.className   = 'program-selector-option';
-        opt.value       = program.id;
+        opt.className = 'program-selector-option';
+        opt.value = program.id;
         opt.textContent = program.title;
         container.appendChild(opt);
     });
@@ -76,7 +76,7 @@ async function loadProgram(program_id) {
         if (!program_state.populated) {
             const program_data = await fetchProgram(program_id);
             populateState(program_state, program_data);
-            program_state.populated  = true;
+            program_state.populated = true;
             program_state.activeView = 'list';
         }
 
@@ -90,7 +90,7 @@ async function loadProgram(program_id) {
 }
 
 function buildPageOfProgram(program_state) {
-    autoSelectMandatory(program_state);
+    autoSelectTroncCommun(program_state);
     buildCourseCatalogue(program_state);
     buildProgramView(program_state);
     buildConstraints(program_state);
@@ -116,10 +116,9 @@ function updateAll() {
 
     // Sync option header checkboxes
     document.querySelectorAll('.option-header').forEach(option => {
-        if (option.dataset.id === 'tronc') return;
         const sel = program_state.selected_options.has(Number(option.dataset.id));
         option.classList.toggle('selected', sel);
-        option.querySelector('.check').textContent = sel ? '✓' : '';
+        if (option.querySelector('.check')) option.querySelector('.check').textContent = sel ? '✓' : '';
     });
 
     buildProgramView(program_state);

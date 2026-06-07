@@ -49,15 +49,6 @@ CREATE TABLE IF NOT EXISTS prerequisites (
     PRIMARY KEY (course_id, prerequisite_id)
 );
 
-CREATE TABLE IF NOT EXISTS tronc_courses (
-    program_id  INTEGER NOT NULL REFERENCES programs(id),
-    course_id   INTEGER NOT NULL REFERENCES courses(id),
-    years  TEXT,
-    position    INTEGER NOT NULL,
-    mandatory   INTEGER NOT NULL DEFAULT 0, 
-    PRIMARY KEY (program_id, course_id)
-);
-
 CREATE TABLE IF NOT EXISTS option_courses (
     option_id   INTEGER NOT NULL REFERENCES option(id),
     course_id   INTEGER NOT NULL REFERENCES courses(id),
@@ -115,8 +106,6 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
         )
         program_id = cursor.lastrowid
 
-        insert_tronc_commun(cursor, program["tronc_commun"], program_id)
-
         for position, option in enumerate(program["options"]):
             insert_option(cursor, option, program_id, position=position)
 
@@ -126,20 +115,6 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
     except Exception as e:
         conn.rollback()
         raise e
-
-
-def insert_tronc_commun(cursor: sqlite3.Cursor, courses: list, program_id: int):
-
-    for course in courses:
-        pos = course["position"]
-        course_db_id = insert_or_get_course(cursor, course)
-        cursor.execute(
-            """
-            INSERT OR IGNORE INTO tronc_courses (program_id, course_id, years, position)
-            VALUES(?, ?, ?, ?)
-            """,
-            (program_id, course_db_id, course["years"], pos),
-        )
 
 
 def insert_option(
@@ -180,7 +155,11 @@ def insert_option(
                 course_db_id,
                 course["years"],
                 course["position"],
-                course["mandatory"],
+                (
+                    course["mandatory"]
+                    # if not "tronc_commun" in option["html_id"]
+                    # else True
+                ),
             ),
         )
 

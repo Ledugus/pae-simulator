@@ -9,51 +9,38 @@
 function buildConstraints(program_state) {
     const container = document.getElementById('constraints-list');
     container.innerHTML = '';
-    const byOption  = getEctsByOption(program_state);
+    const byOption = getEctsByOption(program_state);
     const totalEcts = program_state?.total_ects || 120;
 
     // Total programme
     renderConstraintBar(container, {
-        label:   'Total programme',
+        label: 'Total programme',
         current: getSelectedEcts(),
-        target:  totalEcts,
-        max:     totalEcts,
+        target: totalEcts,
+        max: totalEcts,
     });
-
-    // Tronc commun
-    const tronc = program_state.optionData['tronc'];
-    if (tronc) {
-        renderConstraintBar(container, {
-            label:   'Tronc commun',
-            current: byOption['tronc'] || 0,
-            target:  tronc.min_ects || 0,
-            max:     tronc.min_ects || null,
-            color:   TRONC_COLORS.primary,
-        });
-    }
 
     // One bar per selected option that has a min_ects target
     program_state.selected_options.forEach(opt_id => {
-        if (opt_id === 'tronc') return;
         const opt = program_state.optionData[opt_id];
         if (!opt || !opt.min_ects) return;
         renderConstraintBar(container, {
-            label:   opt.label,
+            label: opt.label,
             current: byOption[opt.id] || 0,
-            target:  opt.min_ects,
-            max:     opt.max_ects || null,
-            color:   opt.palette.primary,
+            target: opt.min_ects,
+            max: opt.max_ects || null,
+            color: opt.palette.primary,
         });
     });
 }
 
 function renderConstraintBar(container, { label, current, target, max, color }) {
     if (!target) return; // skip bars with no meaningful target
-    const pct         = Math.min(100, Math.round(current / target * 100));
-    const met         = current >= target;
-    const over        = max && current > max;
+    const pct = Math.min(100, Math.round(current / target * 100));
+    const met = current >= target;
+    const over = max && current > max;
     const statusColor = over ? '#f05050' : met ? '#3dd68c' : current > 0 ? '#f0a050' : '#4a5578';
-    const barColor    = color || statusColor;
+    const barColor = color || statusColor;
 
     const item = document.createElement('div');
     item.className = 'constraint-item';
@@ -73,17 +60,17 @@ function renderConstraintBar(container, { label, current, target, max, color }) 
 }
 
 function updateRing(totalEcts = 120) {
-    const ects          = getSelectedEcts();
+    const ects = getSelectedEcts();
     const circumference = 2 * Math.PI * 42;
-    const offset        = circumference * (1 - Math.min(1, ects / totalEcts));
-    const fill          = document.getElementById('ring-fill');
+    const offset = circumference * (1 - Math.min(1, ects / totalEcts));
+    const fill = document.getElementById('ring-fill');
     if (!fill) return;
 
     fill.setAttribute('stroke-dashoffset', offset);
     fill.setAttribute('stroke',
-        ects > totalEcts         ? '#f05050' :
-        ects >= totalEcts * 0.75 ? '#3dd68c' : '#4d7cfe');
+        ects > totalEcts ? '#f05050' :
+            ects >= totalEcts * 0.75 ? '#3dd68c' : '#4d7cfe');
 
-    document.getElementById('ring-num').textContent  = ects;
-    document.getElementById('hdr-ects').textContent  = ects;
+    document.getElementById('ring-num').textContent = ects;
+    document.getElementById('hdr-ects').textContent = ects;
 }

@@ -18,6 +18,5 @@ const OPTION_COLORS = [
     { bg: '#7a88b0', primary: '#5a6890', dark: '#ffffff', mid: '#e8eaf4', badge: '#5a6890' }, // slate
 ];
 
-const TRONC_COLORS = OPTION_COLORS[0];
 
 const RADAR_MAX = 20; // ECTS value that maps to 100% on the radar

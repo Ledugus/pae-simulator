@@ -10,25 +10,6 @@ function buildCourseCatalogue(program_state) {
     const container = document.getElementById('browser-content');
     container.innerHTML = '';
 
-    // ── Tronc commun block (no checkbox — always selected) ──
-    const troncEl = document.createElement('div');
-    troncEl.className = 'section-group';
-
-    const troncHdr = document.createElement('div');
-    troncHdr.className = 'option-header';
-    troncHdr.dataset.id = 'tronc';
-    troncHdr.innerHTML = `
-        <div class="section-chevron" style="color:${TRONC_COLORS.primary}">▼</div>
-        <div class="section-title">Tronc commun</div>`;
-    troncHdr.addEventListener('click', () => troncEl.classList.toggle('collapsed'));
-    troncEl.appendChild(troncHdr);
-
-    const troncBody = document.createElement('div');
-    troncBody.className = 'section-body';
-    renderCourseList(troncBody, program_state.optionData['tronc'].courses, TRONC_COLORS);
-    troncEl.appendChild(troncBody);
-    container.appendChild(troncEl);
-
     // ── One collapsible group per option, grouped by group_label ──
     const grouped = groupOptionsByGroupLabel(Object.values(program_state.optionData));
 
@@ -40,9 +21,8 @@ function buildCourseCatalogue(program_state) {
             container.appendChild(groupHdr);
         }
         options.forEach(opt => {
-            if (opt.id === 'tronc') return;
             const { el, body } = makeCollapsibleGroup(opt, program_state);
-            renderCourseList(body, opt.courses, opt.palette);
+            renderCourseList(body, opt.courses);
             container.appendChild(el);
         });
     });
@@ -53,6 +33,10 @@ function makeCollapsibleGroup(opt, program_state) {
     el.className = 'section-group';
     el.dataset.groupKey = `opt-${opt.id}`;
 
+    const hdr = document.createElement('div');
+    hdr.className = 'option-header';
+    hdr.dataset.id = opt.id;
+    if (program_state.selected_options.has(opt.id)) hdr.classList.add('selected');
     // Left side: chevron + label — click to collapse
     const hdrContent = document.createElement('div');
     hdrContent.className = 'option-header-content';
@@ -60,18 +44,16 @@ function makeCollapsibleGroup(opt, program_state) {
         <div class="section-chevron" style="color:${opt.palette.primary}">▼</div>
         <div class="section-title">${opt.label}</div>`;
     hdrContent.addEventListener('click', () => el.classList.toggle('collapsed'));
+    hdr.appendChild(hdrContent);
 
     // Right side: checkbox — click to select/deselect the option
     const hdrCheck = document.createElement('div');
-    hdrCheck.innerHTML = `<div class="check">${program_state.selected_options.has(opt.id) ? '✓' : ''}</div>`;
-    hdrCheck.addEventListener('click', () => toggleOption(opt));
+    if (!opt.html_id.includes("tronc_commun")) {
+        hdrCheck.innerHTML = `<div class="check">${program_state.selected_options.has(opt.id) ? '✓' : ''}</div>`;
+        hdrCheck.addEventListener('click', () => toggleOption(opt));
+        hdr.appendChild(hdrCheck);
+    }
 
-    const hdr = document.createElement('div');
-    hdr.className = 'option-header';
-    hdr.dataset.id = opt.id;
-    if (program_state.selected_options.has(opt.id)) hdr.classList.add('selected');
-    hdr.appendChild(hdrContent);
-    hdr.appendChild(hdrCheck);
     el.appendChild(hdr);
 
     const body = document.createElement('div');
@@ -81,7 +63,8 @@ function makeCollapsibleGroup(opt, program_state) {
     return { el, body };
 }
 
-function renderCourseList(container, courses, palette) {
+
+function renderCourseList(container, courses) {
     const program_state = getProgramState(state.current_program_id);
 
     courses.forEach(c => {

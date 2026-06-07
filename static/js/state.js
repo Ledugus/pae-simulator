@@ -7,9 +7,9 @@
 'use strict';
 
 const state = {
-    programs:           new Map(),
+    programs: new Map(),
     current_program_id: null,
-    allPrograms:        null,
+    allPrograms: null,
 };
 
 /**
@@ -21,19 +21,18 @@ function getProgramState(program_id) {
     if (!state.programs.has(program_id)) {
         state.programs.set(program_id, {
             // data — populated once by populateState()
-            populated:        false,
-            tronc_commun:     [],
-            courseData:       {},   // { code -> course }
-            courseOptions:    {},   // { code -> [opt_id, ...] }
-            optionData:       {},   // { opt_id -> option }
-            total_ects:       120,
+            populated: false,
+            courseData: {},   // { code -> course }
+            courseOptions: {},   // { code -> [opt_id, ...] }
+            optionData: {},   // { opt_id -> option }
+            total_ects: 120,
 
             // ui state — persists when switching programs
             selected_courses: new Set(),
             selected_options: new Set(),
-            activeFilter:     'all',
-            searchQuery:      '',
-            activeView:       'list',
+            activeFilter: 'all',
+            searchQuery: '',
+            activeView: 'list',
         });
     }
     return state.programs.get(program_id);

@@ -45,23 +45,16 @@ def parse_program(master_code, url):
 
     top_level_lis = root_ul.find_all("li", class_="list-group-item", recursive=False)
 
-    tronc_courses = []
     options = []
 
     for li in top_level_lis:
         label, section_id = extract_label(li)
         content_div = find_content_div(li, section_id)
+        collect_options(content_div, section_id, label, options)
 
-        if "tronc_commun" in section_id:
-            new_courses = extract_courses(content_div)
-            for course in new_courses:
-                tronc_courses.append(course)
-        else:
-            collect_options(content_div, section_id, label, options)
     final_dict = {
         "title": master_code,
         "total_ects": 120,
-        "tronc_commun": tronc_courses,
         "options": options,
     }
     return final_dict

@@ -16,7 +16,7 @@ function populateState(program_state, program_data) {
     program_state.optionData = {};
 
     program_data.options.forEach((opt, i) => {
-        const palette = opt.id === 'tronc'
+        const palette = opt.html_id.includes('tronc_commun')
             ? OPTION_COLORS[0]
             : OPTION_COLORS[(i % (OPTION_COLORS.length - 1)) + 1];
 
@@ -30,25 +30,21 @@ function populateState(program_state, program_data) {
         });
     });
 }
-
-/**
- * Pre-selects the tronc commun option and all its courses.
- */
-function autoSelectMandatory(program_state) {
-    program_state.selected_options.add('tronc');
-    Object.values(program_state.courseData).forEach(c => {
-        if (program_state.courseOptions[c.code]?.includes('tronc')) {
-            program_state.selected_courses.add(c.code);
-        }
-    });
+function autoSelectTroncCommun(program_state) {
+    const tronc_commun = Object.values(program_state.optionData)
+        .filter(opt =>
+            opt.html_id.includes('tronc')
+        )[0];
+    toggleOption(tronc_commun)
 }
+
 
 /**
  * Returns the palette of the first option a course belongs to.
  */
 function getCourseColorPalette(program_state, code) {
     const optId = program_state.courseOptions[code]?.[0];
-    return program_state.optionData[optId]?.palette || TRONC_COLORS;
+    return program_state.optionData[optId].palette;
 }
 
 /**
@@ -65,7 +61,6 @@ function getSelectedEcts() {
 
 /**
  * Returns { optionId -> ects_selected } for every option.
- * Includes a 'tronc' key.
  */
 function getEctsByOption(program_state) {
     const counts = {};

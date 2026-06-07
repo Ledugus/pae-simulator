@@ -21,19 +21,9 @@ function buildProgramList(program_state) {
     container.innerHTML = '';
     let hasAny = false;
 
-    // Tronc commun
-    const troncCourses = Array.from(program_state.selected_courses)
-        .filter(code => program_state.courseOptions[code]?.includes('tronc'))
-        .map(code => program_state.courseData[code]);
-
-    if (troncCourses.length) {
-        hasAny = true;
-        container.appendChild(makeProgramSection('Tronc commun', TRONC_COLORS, troncCourses));
-    }
 
     // Options — only those with at least one selected course
     Object.values(program_state.optionData).forEach(opt => {
-        if (opt.id === 'tronc') return;
         const courses = Array.from(program_state.selected_courses)
             .filter(code => program_state.courseOptions[code]?.includes(opt.id))
             .map(code => program_state.courseData[code]);
