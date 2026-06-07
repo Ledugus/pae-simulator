@@ -90,7 +90,7 @@ async function loadProgram(program_id) {
 }
 
 function buildPageOfProgram(program_state) {
-    autoSelectTroncCommun(program_state);
+    if (program_state.selected_options.size === 0) autoSelectTroncCommun(program_state);
     buildCourseCatalogue(program_state);
     buildProgramView(program_state);
     buildConstraints(program_state);
