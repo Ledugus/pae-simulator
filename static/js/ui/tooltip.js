@@ -15,22 +15,22 @@ function showCourseTooltip(e, c) {
         ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
         ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
         ${c.years ? `&nbsp;${getBlocsFromYears(c.years)}` : ''}`;
-    moveTooltip(e);
+    moveOptionTooltip(e);
 }
 
-function moveTooltip(e) {
+function moveCourseTooltip(e) {
     const tip = document.getElementById('course-tooltip');
     tip.style.left = `${e.clientX + 14}px`;
     tip.style.top = `${e.clientY - 10}px`;
 }
 
-function hideTooltip() {
+function hideCourseTooltip() {
     document.getElementById('course-tooltip').style.display = 'none';
 }
 
 document.addEventListener('mousemove', e => {
     const tip = document.getElementById('course-tooltip');
-    if (tip.style.display === 'block') moveTooltip(e);
+    if (tip.style.display === 'block') moveCourseTooltip(e);
 });
 
 function showOptionTooltip(e, opt) {
@@ -40,20 +40,20 @@ function showOptionTooltip(e, opt) {
         <strong style="color:var(--text)">${opt.label}</strong><br>
         <span style="color:var(--text-muted)">${opt.description}</span><br>
         ${opt.min_ects ? `<span style="color:var(--accent2)">MIN ${opt.min_ects} ECTS</span>` : ''}`;
-    moveTooltip(e);
+    moveOptionTooltip(e);
 }
 
-function moveTooltip(e) {
+function moveOptionTooltip(e) {
     const tip = document.getElementById('option-tooltip');
     tip.style.left = `${e.clientX + 14}px`;
     tip.style.top = `${e.clientY - 10}px`;
 }
 
-function hideTooltip() {
+function hideOptionTooltip() {
     document.getElementById('option-tooltip').style.display = 'none';
 }
 
 document.addEventListener('mousemove', e => {
     const tip = document.getElementById('option-tooltip');
-    if (tip.style.display === 'block') moveTooltip(e);
+    if (tip.style.display === 'block') moveOptionTooltip(e);
 });
