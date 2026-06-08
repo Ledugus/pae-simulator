@@ -44,6 +44,8 @@ function makeCollapsibleGroup(opt, program_state) {
         <div class="section-chevron" style="color:${opt.palette.primary}">▼</div>
         <div class="section-title">${opt.label}</div>`;
     hdrContent.addEventListener('click', () => el.classList.toggle('collapsed'));
+    hdrContent.addEventListener('mouseenter', e => showOptionTooltip(e, opt));
+    hdrContent.addEventListener('mouseleave', () => hideOptionTooltip());
     hdr.appendChild(hdrContent);
 
     // Right side: checkbox — click to select/deselect the option

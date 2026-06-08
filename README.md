@@ -13,14 +13,11 @@ Scraping :
 - Scrape API de l'horaire
 
 Logique de validation : 
-- ajouter les règles de validation des options (=cours obligatoire + minimum ects)
 - règle de prérequis
 
 UI : 
-- Texte de la toile d'araignée
 - Panels ajustables
 - Arrangement des cours choisis selon le quadri, drag & drop des cours dans le slot voulu
-- Ajouter widget de remplissage des options sélectionnées
 - Ajouter un widget de prévisualisation de l'horaire
 
 Collab : 

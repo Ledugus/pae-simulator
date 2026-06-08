@@ -66,17 +66,34 @@ def collect_options(
 
     nested_ul = container.find("ul", class_="cafo_lu")
 
+    description = ""
+    min_ects = 0
     if nested_ul is None:
         courses = extract_courses(container)
+        description_el = container.find("div", class_="ppe_remarque_facultaire_new")
+        if description_el is not None:
+            description = description_el.get_text()
+        numbers = list(map(int, re.findall(r"\d+", description)))
+        if len(numbers) >= 1:
+            min_ects = numbers[0]
+
+        numbers_in_label = list(map(int, re.findall(r"\d+", group_label)))
+        if len(numbers_in_label) >= 1:
+            min_ects = numbers_in_label[0]
+
+        print(group_label, min_ects)
         if courses:
             options.append(
                 {
                     "html_id": section_id,
                     "label": group_label,
                     "group_label": None,
+                    "description": description,
+                    "min_ects": min_ects,
                     "courses": courses,
                 }
             )
+
     else:
         # Grouping node — current label becomes the group_label for children
         child_lis = nested_ul.find_all("li", class_="list-group-item", recursive=False)

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS options (
     html_id     TEXT,
     label       TEXT NOT NULL,
     group_label TEXT,
+    description TEXT,
+    min_ects    INTEGER,
     position    INTEGER NOT NULL
 );
 
@@ -129,14 +131,16 @@ def insert_option(
     """
     cursor.execute(
         """
-        INSERT INTO options (html_id, program_id, label, group_label, position)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO options (html_id, program_id, label, group_label, description, min_ects, position)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             option["html_id"],
             program_id,
             option["label"],
             option["group_label"],
+            option["description"],
+            option["min_ects"],
             position,
         ),
     )
@@ -155,11 +159,7 @@ def insert_option(
                 course_db_id,
                 course["years"],
                 course["position"],
-                (
-                    course["mandatory"]
-                    # if not "tronc_commun" in option["html_id"]
-                    # else True
-                ),
+                course["mandatory"],
             ),
         )
 

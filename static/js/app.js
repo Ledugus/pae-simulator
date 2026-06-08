@@ -95,7 +95,7 @@ function buildPageOfProgram(program_state) {
     buildCourseCatalogue(program_state);
     buildProgramView(program_state);
     buildConstraints(program_state);
-    buildRadar();
+    // buildRadar();
     updateRing(program_state.total_ects);
     updateAll();
 }
@@ -132,7 +132,7 @@ function updateAll() {
 
     buildProgramView(program_state);
     buildConstraints(program_state);
-    buildRadar();
+    // buildRadar();
     updateRing(program_state.total_ects);
     applyFilters();
 }

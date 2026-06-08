@@ -29,7 +29,7 @@ def get_program(program_id: int) -> dict | None:
 
     option_rows = conn.execute(
         """
-        SELECT id, html_id, label, group_label, position
+        SELECT id, html_id, label, group_label, description, min_ects, position
         FROM options
         WHERE program_id = ?
         ORDER BY position
@@ -115,6 +115,8 @@ def build_program(program_row, option_rows, course_rows, prof_rows) -> dict:
             "html_id": row["html_id"],
             "label": row["label"],
             "group_label": row["group_label"],
+            "description": row["description"],
+            "min_ects": row["min_ects"],
             "courses": courses_by_option.get(row["id"], []),
         }
         for row in option_rows
