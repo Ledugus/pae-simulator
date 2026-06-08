@@ -28,14 +28,13 @@ Collab :
 ## Setup
 Pour lancer l'app en local : 
 ```bash
-git clone "https://ENTERURL" pae
-cd pae
+git clone "https://github.com/Ledugus/pae-simulator.git" pae-simulator
+cd pae-simulator
 python3 -m venv .venv
 pip install -r requirements.txt
-python3 src/seed.py
+python3 src/seed.py # Setup the database
 fastapi dev
 ```
-
 
 
 ## Contribuer
