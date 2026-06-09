@@ -49,12 +49,12 @@ def get_program(program_id: int) -> dict | None:
         (program_id,),
     ).fetchall()
 
-    prof_rows = conn.execute(
+    teachers_rows = conn.execute(
         """
-        SELECT p.id, p.name, c.code
-        FROM professors p
-        JOIN teaching t ON t.prof_id = p.id
-        JOIN courses c ON c.id = t.course_id
+        SELECT t.id, t.name, c.code
+        FROM teachers t
+        JOIN teaching teach ON teach.teacher_id = t.id
+        JOIN courses c ON c.id = teach.course_id
         WHERE c.id IN (
             SELECT oc.course_id FROM option_courses oc
             JOIN options o ON o.id = oc.option_id
@@ -66,10 +66,10 @@ def get_program(program_id: int) -> dict | None:
     ).fetchall()
     conn.close()
 
-    return build_program(program_row, option_rows, course_rows, prof_rows)
+    return build_program(program_row, option_rows, course_rows, teachers_rows)
 
 
-def build_program(program_row, option_rows, course_rows, prof_rows) -> dict:
+def build_program(program_row, option_rows, course_rows, teachers_rows) -> dict:
 
     # Index option courses by option_id for quick lookup
     # { option_id: [course, course, ...] }
@@ -104,9 +104,9 @@ def build_program(program_row, option_rows, course_rows, prof_rows) -> dict:
             }
         )
 
-    professors = {}
-    for row in prof_rows:
-        professors[row["id"]] = row["name"]
+    teachers = {}
+    for row in teachers_rows:
+        teachers[row["id"]] = row["name"]
         courses[row["code"]]["teachers"].append(row["id"])
 
     options = [
@@ -128,7 +128,7 @@ def build_program(program_row, option_rows, course_rows, prof_rows) -> dict:
         "total_ects": program_row["total_ects"],
         "courses": courses,  # dict keyed by code
         "options": options,  # list of options, each with a courses list
-        "professors": professors,
+        "teachers": teachers,
     }
 
 
@@ -143,11 +143,11 @@ def test_db():
     else:
         print(course["title"])
 
-    prof = conn.execute(
+    teacher = conn.execute(
         "SELECT * FROM teaching WHERE course_id = ?",
         (int(100),),
     ).fetchone()[0]
-    print(prof)
+    print(teacher)
 
 
 if __name__ == "__main__":

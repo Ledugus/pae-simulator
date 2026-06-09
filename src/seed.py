@@ -34,15 +34,15 @@ CREATE TABLE IF NOT EXISTS courses (
     friendly INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS professors (
+CREATE TABLE IF NOT EXISTS teachers (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     name  TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS teaching (
     course_id     INTEGER NOT NULL REFERENCES courses(id),
-    prof_id       INTEGER NOT NULL REFERENCES professors(id),
-    PRIMARY KEY (course_id, prof_id)
+    teacher_id    INTEGER NOT NULL REFERENCES teachers(id),
+    PRIMARY KEY (course_id, teacher_id)
 );
 
 CREATE TABLE IF NOT EXISTS prerequisites (
@@ -193,13 +193,13 @@ def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
     cursor.execute("SELECT id FROM courses WHERE code = ?", (course["code"],))
     course_id = cursor.fetchone()[0]
 
-    # Add the teachers, and the teaching relation course-professor
+    # Add the teachers, and the teaching relation course-teacher
     teachers = course.get("teachers")
     if teachers:
         for teacher in teachers:
             cursor.execute(
                 """
-                INSERT INTO professors (name)
+                INSERT INTO teachers (name)
                 VALUES (?)
                 ON CONFLICT(name) DO NOTHING
                 """,
@@ -207,12 +207,12 @@ def insert_or_get_course(cursor: sqlite3.Cursor, course: dict) -> int:
             )
 
             teacher_id = cursor.execute(
-                "SELECT id FROM professors WHERE name = ?", (teacher,)
+                "SELECT id FROM teachers WHERE name = ?", (teacher,)
             ).fetchone()[0]
 
             cursor.execute(
                 """
-                INSERT OR IGNORE INTO teaching (course_id, prof_id)
+                INSERT OR IGNORE INTO teaching (course_id, teacher_id)
                 VALUES (?, ?)
                 """,
                 (course_id, teacher_id),

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // js/ui/tooltip.js
 // Hover tooltip on course rows.
-// Depends on: nothing
+// Depends on: helpers
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';
@@ -14,8 +14,10 @@ function showCourseTooltip(e, c) {
         <span style="color:var(--text-muted)">${c.code}</span><br>
         ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
         ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
-        ${c.years ? `&nbsp;${getBlocsFromYears(c.years)}` : ''}`;
-    moveOptionTooltip(e);
+        ${c.years ? `&nbsp;${getBlocsFromYears(c.years)}` : ''}
+        ${c.teachers ? `<br>${getTeachersString(c.teachers)}` : ''}
+        `;
+    moveCourseTooltip(e);
 }
 
 function moveCourseTooltip(e) {

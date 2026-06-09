@@ -24,6 +24,7 @@ function getProgramState(program_id) {
             populated: false,
             courseData: {},   // { code -> course }
             courseOptions: {},   // { code -> [opt_id, ...] }
+            teachers: {},
             optionData: {},   // { opt_id -> option }
             total_ects: 120,
 

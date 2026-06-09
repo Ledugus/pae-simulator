@@ -29,6 +29,8 @@ function populateState(program_state, program_data) {
             program_state.courseOptions[c.code].push(opt.id);
         });
     });
+
+    program_state.teachers = program_data.teachers;
 }
 function autoSelectTroncCommun(program_state) {
     const tronc_commun = Object.values(program_state.optionData)
@@ -105,4 +107,9 @@ function getBlocsFromYears(years) {
     if (years === "12") {
         return "Blocs 1 & 2"
     }
+}
+
+function getTeachersString(teachers) {
+    const teachersList = getProgramState(state.current_program_id).teachers
+    return teachers.map(id => teachersList[id]).join(" - ")
 }

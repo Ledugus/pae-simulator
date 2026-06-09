@@ -100,7 +100,10 @@ function renderCourseList(container, courses) {
                 ${course.semester ? `<span class="badge badge-q">Q${course.semester.split("").join("+")}</span>` : ''}
             </div>`;
 
-        row.addEventListener('click', () => toggleCourse(course.code));
+        row.addEventListener("click", function(e) {
+            if (e.target.closest("a")) return;
+            toggleCourse(course.code)
+        });
         row.addEventListener('mouseenter', e => showCourseTooltip(e, course));
         row.addEventListener('mouseleave', () => hideCourseTooltip());
 

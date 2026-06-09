@@ -81,7 +81,6 @@ def collect_options(
         if len(numbers_in_label) >= 1:
             min_ects = numbers_in_label[0]
 
-        print(group_label, min_ects)
         if courses:
             options.append(
                 {
