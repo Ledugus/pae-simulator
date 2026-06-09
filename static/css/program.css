@@ -26,17 +26,17 @@
     background: var(--accent-color);
     color: white;
 }
-.program-section {
+.program-option {
   border-bottom: 1px solid var(--border);
   padding: 12px 16px;
 }
-.program-section-header {
+.program-option-header {
   display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
 }
-.program-section-dot {
+.program-option-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
-.program-section-name {
+.program-option-name {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -93,7 +93,7 @@
   font-size: 11px; color: var(--accent2); flex-shrink: 0;
 }
 
-.empty-section {
+.empty-option {
   font-size: 11px;
   color: var(--text-muted);
   font-style: italic;

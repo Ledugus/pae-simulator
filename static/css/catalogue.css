@@ -44,8 +44,8 @@
 .filter-btn:hover { border-color: var(--accent); color: var(--accent2); }
 .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-/* Section groups */
-.section-group {
+/* Option groups */
+.option-group {
   border-bottom: 1px solid var(--border);
 }
 .group-label-header {
@@ -75,12 +75,12 @@
   gap: 8px;
   min-width: 0;
 }
-.section-dot {
+.option-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.section-title {
+.option-title {
 
   font-size: 12px;
   font-weight: 400;
@@ -89,13 +89,13 @@
   color: var(--text-dim);
   flex: 1;
 }
-.section-chevron {
+.option-chevron {
   font-size: 10px; 
   color: var(--text-muted);
   transition: transform .2s;
 }
-.section-group.collapsed .section-chevron { transform: rotate(-90deg); }
-.section-group.collapsed .section-body { display: none; }
+.option-group.collapsed .option-chevron { transform: rotate(-90deg); }
+.option-group.collapsed .option-body { display: none; }
 
 .subsection-header {
   padding: 6px 16px 5px 28px;

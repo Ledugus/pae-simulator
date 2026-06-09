@@ -23,7 +23,6 @@ function buildConstraints(program_state) {
     // One bar per selected option that has a min_ects target
     program_state.selected_options.forEach(opt_id => {
         const opt = program_state.optionData[opt_id];
-        console.log("rendering opt", opt.label, opt.min_ects)
         if (!opt || !opt.min_ects) return;
         renderConstraintBar(container, {
             label: opt.label,

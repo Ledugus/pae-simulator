@@ -30,7 +30,7 @@ function buildCourseCatalogue(program_state) {
 
 function makeCollapsibleGroup(opt, program_state) {
     const el = document.createElement('div');
-    el.className = 'section-group';
+    el.className = 'option-group';
     el.dataset.groupKey = `opt-${opt.id}`;
 
     const hdr = document.createElement('div');
@@ -41,8 +41,8 @@ function makeCollapsibleGroup(opt, program_state) {
     const hdrContent = document.createElement('div');
     hdrContent.className = 'option-header-content';
     hdrContent.innerHTML = `
-        <div class="section-chevron" style="color:${opt.palette.primary}">▼</div>
-        <div class="section-title">${opt.label}</div>`;
+        <div class="option-chevron" style="color:${opt.palette.primary}">▼</div>
+        <div class="option-title">${opt.label}</div>`;
     hdrContent.addEventListener('click', () => el.classList.toggle('collapsed'));
     hdr.addEventListener('mouseenter', e => showOptionTooltip(e, opt));
     hdr.addEventListener('mouseleave', () => hideOptionTooltip());
@@ -59,7 +59,7 @@ function makeCollapsibleGroup(opt, program_state) {
     el.appendChild(hdr);
 
     const body = document.createElement('div');
-    body.className = 'section-body';
+    body.className = 'option-body';
     el.appendChild(body);
 
     return { el, body };
