@@ -8,6 +8,7 @@
 
 // ─── INIT ──────────────────────────────────────────────────────
 
+/** First function to be called */
 async function init() {
     setLoadingState('loading');
     try {
@@ -27,6 +28,9 @@ async function init() {
 
 // ─── LOADING STATE ─────────────────────────────────────────────
 
+/** Sets the loading element to the desired status
+ *  Arg status : string loading/error/ready
+ *  Arg message: string used when errors occur */
 function setLoadingState(status, message = '') {
     document.getElementById('ui-loading').hidden = status !== 'loading';
     document.getElementById('ui-error').hidden = status !== 'error';
@@ -38,6 +42,8 @@ function setLoadingState(status, message = '') {
 
 // ─── PROGRAM SELECTOR ──────────────────────────────────────────
 
+/** Builds HTML element program-selector, already present in index.html 
+ *  Arg allPrograms: dict of programs objects */
 function buildProgramSelector(allPrograms) {
     const container = document.getElementById('program-selector');
     container.innerHTML = '';
@@ -58,6 +64,7 @@ function buildProgramSelector(allPrograms) {
     });
 }
 
+/** Event handler for program-selector, specified in index.html */
 function programEventHandler(event) {
     if (event.target.value != 0) {
         const defaultOpt = document.getElementById('program-selector-default-option');
@@ -66,6 +73,8 @@ function programEventHandler(event) {
     loadProgram(event.target.value);
 }
 
+/** Change current program and refresh UI, populate state if needed 
+ *  Arg program_id: int*/
 async function loadProgram(program_id) {
     if (state.current_program_id === program_id) return;
     setLoadingState('loading');
@@ -81,32 +90,25 @@ async function loadProgram(program_id) {
         }
 
         state.current_program_id = program_id;
+        if (program_state.selected_options.size === 0) autoSelectTroncCommun(program_state);
         buildPageOfProgram(program_state);
-        restoreFilterUI(program_state);
         setLoadingState('ready');
     } catch (error) {
         setLoadingState('error', error.message);
     }
 }
 
+/** Build all UI given a program data 
+ *  Arg program_state: program data object*/
 function buildPageOfProgram(program_state) {
-    if (program_state.selected_options.size === 0) autoSelectTroncCommun(program_state);
-
     buildCourseCatalogue(program_state);
-    buildProgramView(program_state);
-    buildConstraints(program_state);
-    // buildRadar();
-    updateRing(program_state.total_ects);
-    updateAll();
+    restoreFilterUI(program_state);
+    updateAll(program_state);
 }
 
-// ─── UPDATE ALL ────────────────────────────────────────────────
-// Reconciles the DOM with the current selection state.
-// Called after every toggle.
-
-function updateAll() {
-    const program_state = getProgramState(state.current_program_id);
-    if (!program_state) return;
+/** Reconciles the DOM with the current selection state. 
+  * Called after every toggle.*/
+function updateAll(program_state) {
 
     // Sync course row checkboxes
     document.querySelectorAll('.course-row').forEach(row => {
@@ -133,7 +135,8 @@ function updateAll() {
     buildProgramView(program_state);
     buildConstraints(program_state);
     // buildRadar();
-    updateRing(program_state.total_ects);
+    const ects = getSelectedEcts(program_state)
+    updateRing(ects, program_state.total_ects);
     applyFilters();
 }
 

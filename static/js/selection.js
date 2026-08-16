@@ -30,7 +30,7 @@ function toggleCourse(code) {
     } else {
         program_state.selected_courses.add(code);
     }
-    updateAll();
+    updateAll(program_state);
 }
 
 function toggleOption(opt) {
@@ -55,5 +55,5 @@ function toggleOption(opt) {
             .filter(c => c.mandatory)
             .forEach(c => program_state.selected_courses.add(c.code));
     }
-    updateAll();
+    updateAll(program_state)
 }

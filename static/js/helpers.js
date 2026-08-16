@@ -51,9 +51,9 @@ function getCourseColorPalette(program_state, code) {
 
 /**
  * Returns the total ECTS of all selected courses.
+ * Arg program_state: program data object
  */
-function getSelectedEcts() {
-    const program_state = getProgramState(state.current_program_id);
+function getSelectedEcts(program_state) {
     let total = 0;
     program_state.selected_courses.forEach(code => {
         total += program_state.courseData[code]?.ects || 0;
@@ -97,15 +97,15 @@ function groupOptionsByGroupLabel(options) {
 }
 
 
-function getBlocsFromYears(years) {
+function getYearsString(years) {
     if (years === "1") {
-        return "Bloc 1"
+        return "M1"
     }
     if (years === "2") {
-        return "Bloc 2"
+        return "M2"
     }
     if (years === "12") {
-        return "Blocs 1 & 2"
+        return "M1 & M2"
     }
 }
 

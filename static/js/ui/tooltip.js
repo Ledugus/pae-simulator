@@ -14,7 +14,7 @@ function showCourseTooltip(e, c) {
         <span style="color:var(--text-muted)">${c.code}</span><br>
         ${c.hours ? `<span>${c.hours}h</span> &nbsp;` : ''}
         ${c.ects ? `<span style="color:var(--accent2)">${c.ects} ECTS</span>` : ''}
-        ${c.years ? `&nbsp;${getBlocsFromYears(c.years)}` : ''}
+        ${c.years ? `&nbsp;${getYearsString(c.years)}` : ''}
         ${c.teachers ? `<br>${getTeachersString(c.teachers)}` : ''}
         `;
     moveCourseTooltip(e);

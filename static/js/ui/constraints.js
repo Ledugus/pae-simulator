@@ -15,7 +15,7 @@ function buildConstraints(program_state) {
     // Total programme
     renderConstraintBar(container, {
         label: 'Total programme',
-        current: getSelectedEcts(),
+        current: getSelectedEcts(program_state),
         target: totalEcts,
         max: totalEcts,
     });
@@ -59,8 +59,7 @@ function renderConstraintBar(container, { label, current, target, max, color }) 
     container.appendChild(item);
 }
 
-function updateRing(totalEcts = 120) {
-    const ects = getSelectedEcts();
+function updateRing(ects, totalEcts = 120) {
     const circumference = 2 * Math.PI * 42;
     const offset = circumference * (1 - Math.min(1, ects / totalEcts));
     const fill = document.getElementById('ring-fill');
