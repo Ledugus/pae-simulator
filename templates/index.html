@@ -13,49 +13,61 @@
 <link href="{{ url_for('static', path='/css/program.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', path='/css/toast.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', path='/css/tooltip.css') }}" rel="stylesheet">
+<link rel="icon" href="{{ url_for('static', path='favicon.ico') }}">
 </head>
 <body>
 
 <header>
     <div class="logo">UCLouvain &mdash;</div>
-            <div>
-            <select id="program-selector" onchange="programEventHandler(event)">
-</select>
-</div>
-  <div class="ects-total">
-    <strong id="hdr-ects">0</strong> / 120 ECTS sélectionnés
-  </div>
+    <div>
+        <select id="program-selector" onchange="programEventHandler(event)">
+        </select>
+    </div>
+    <div class="ects-total">
+        <strong id="hdr-ects">0</strong> / 120 ECTS sélectionnés
+    </div>
+    <div class="save"> 
+        <input type="text" id="saveTitleInput" placeholder="Name this save..." />
+        <button id="saveBtn">Save</button>
+    </div>
+    <div id="loadSaveContainer">
+        <select id="loadSaveSelect">
+            <option value="">-- Load a save --</option>
+        </select>
+        <button id="loadSaveBtn">Load</button>
+        <button id="deleteSaveBtn">Delete</button>
+    </div>
 </header>
 <div id="ui-loading">
-  <p>Loading programme...</p>
+    <p>Loading programme...</p>
 </div>
 
 <div id="ui-error" hidden>
-  <p>Could not load programme: <span id="error-message"></span></p>
-  <button onclick="init()">Retry</button>
+    <p>Could not load programme: <span id="error-message"></span></p>
+    <button onclick="init()">Retry</button>
 </div>
 
 <div id="ui-ready" hidden>
-  <!-- your three panels go here -->
+<!-- your three panels go here -->
 <!-- LEFT PANEL -->
 <div class="panel" id="panel-browser">
-  <div class="panel-header">
-    <h2>Catalogue des cours</h2>
-      <div class="search-wrap">
-        <input type="text" id="search-input" placeholder="Rechercher un cours…" autocomplete="off">
-        <span class="search-clear" id="search-clear">CLEAR</span>
-      </div>
-    <div class="filter-row">
-      <button class="filter-btn active" data-filter="all">Tous</button>
-      <button class="filter-btn" data-filter="EN">EN</button>
-      <button class="filter-btn" data-filter="FR">FR</button>
-      <button class="filter-btn" data-filter="q1">Q1</button>
-      <button class="filter-btn" data-filter="q2">Q2</button>
-      <button class="filter-btn" data-filter="5">5 ECTS</button>
+    <div class="panel-header">
+        <h2>Catalogue des cours</h2>
+        <div class="search-wrap">
+            <input type="text" id="search-input" placeholder="Rechercher un cours…" autocomplete="off">
+            <span class="search-clear" id="search-clear">CLEAR</span>
+        </div>
+        <div class="filter-row">
+            <button class="filter-btn active" data-filter="all">Tous</button>
+            <button class="filter-btn" data-filter="EN">EN</button>
+            <button class="filter-btn" data-filter="FR">FR</button>
+            <button class="filter-btn" data-filter="q1">Q1</button>
+            <button class="filter-btn" data-filter="q2">Q2</button>
+            <button class="filter-btn" data-filter="5">5 ECTS</button>
+        </div>
+        <span class="results-count">Found <span id="results-count">no</span> courses</span>
     </div>
-                    <span class="results-count">Found <span id="results-count">no</span> courses</span>
-  </div>
-  <div id="browser-content"></div>
+    <div id="browser-content"></div>
 </div>
 
 <!-- MIDDLE PANEL -->
@@ -111,6 +123,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="/static/js/ui-config.js"></script>
 <script src="/static/js/state.js"></script>
+<script src="/static/js/saves.js"></script>
 <script src="/static/js/api.js"></script>
 <script src="/static/js/helpers.js"></script>
 <script src="/static/js/ui/toast.js"></script>

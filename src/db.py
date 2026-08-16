@@ -1,9 +1,92 @@
 import sqlite3
+import json
+from pydantic import BaseModel
 from datetime import datetime, time, timezone, timedelta
+
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS programs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT    NOT NULL,
+    total_ects  INTEGER NOT NULL,
+    last_seeded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS options (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    program_id  INTEGER NOT NULL REFERENCES programs(id),
+    html_id     TEXT,
+    label       TEXT NOT NULL,
+    group_label TEXT,
+    description TEXT,
+    min_ects    INTEGER,
+    position    INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS courses (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    code  TEXT    NOT NULL UNIQUE, 
+    title TEXT    NOT NULL,
+    ects  INTEGER,
+    lang  TEXT,
+    semester TEXT,
+    hours  INTEGER,
+    friendly INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS teachers (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    name  TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS teaching (
+    course_id     INTEGER NOT NULL REFERENCES courses(id),
+    teacher_id    INTEGER NOT NULL REFERENCES teachers(id),
+    PRIMARY KEY (course_id, teacher_id)
+);
+
+CREATE TABLE IF NOT EXISTS prerequisites (
+    course_id        INTEGER NOT NULL REFERENCES courses(id),
+    prerequisite_id  INTEGER NOT NULL REFERENCES courses(id),
+    PRIMARY KEY (course_id, prerequisite_id)
+);
+
+CREATE TABLE IF NOT EXISTS option_courses (
+    option_id   INTEGER NOT NULL REFERENCES option(id),
+    course_id   INTEGER NOT NULL REFERENCES courses(id),
+    years  TEXT,
+    position    INTEGER NOT NULL,   -- preserves ordering within an option 
+    mandatory   INTEGER NOT NULL DEFAULT 0, -- 1 = mandatory
+    PRIMARY KEY (option_id, course_id)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS saves (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data TEXT
+);
+
+"""
+
+
+def init_db(conn: sqlite3.Connection) -> None:
+    """Creates all tables. Safe to call multiple times (IF NOT EXISTS)."""
+    conn.executescript(SCHEMA)
+    conn.commit()
+    print("Ensured schema.")
 
 
 def get_db():
     conn = sqlite3.connect("database.db")
+    init_db(conn)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -133,23 +216,50 @@ def build_program(program_row, option_rows, course_rows, teachers_rows) -> dict:
     }
 
 
-def save_program(user_id, save_name, program_data, save_id=None):
+class SaveRequest(BaseModel):
+    user_id: int
+    title: str
+    save_id: int | None = None
+    data: dict
+
+
+def save_program_to_db(req: SaveRequest):
     conn = get_db()
     cursor = conn.cursor()
 
-    time_string = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-    if save_id:
+    serialized = json.dumps(req.data)
+    if req.save_id is not None:
+        # TODO
+        conn.execute(
+            "UPDATE saves SET title = ?, data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (req.title, serialized, req.save_id),
+        )
+        conn.commit()
+        return req.save_id
 
-        # change the content and the name of the save,
-        # set new last_save_time
-        return save_id
     try:
         cursor.execute(
-            "INSERT INTO saves (user, name, creation_time, last_save_time, content) VALUES (?, ?, ?)",
-            (user_id, save_name, time_string, time_string, program_data),
+            "INSERT INTO saves (user, title, data) VALUES (?, ?, ?)",
+            (req.user_id, req.title, serialized),
         )
         save_id = cursor.lastrowid
+        conn.commit()
         return save_id
+
+    except Exception as e:
+        conn.rollback()
+        raise e
+
+
+def get_all_saves_from_user(user_id: int):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        saves_rows = cursor.execute(
+            "SELECT * FROM saves WHERE user = ?", (user_id,)
+        ).fetchall()
+        return saves_rows
 
     except Exception as e:
         conn.rollback()
@@ -175,5 +285,4 @@ def test_db():
 
 
 if __name__ == "__main__":
-    test_db()
-    get_program(1)
+    print(get_all_saves_from_user(1)[:][:])

@@ -1,87 +1,8 @@
 import os
 import sqlite3
 from datetime import datetime, timezone, timedelta
-
+from db import init_db
 from scrape import parse_program, parse_program_list
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS programs (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    title       TEXT    NOT NULL,
-    total_ects  INTEGER NOT NULL,
-    last_seeded_at TEXT
-);
-
-CREATE TABLE IF NOT EXISTS options (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_id  INTEGER NOT NULL REFERENCES programs(id),
-    html_id     TEXT,
-    label       TEXT NOT NULL,
-    group_label TEXT,
-    description TEXT,
-    min_ects    INTEGER,
-    position    INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS courses (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    code  TEXT    NOT NULL UNIQUE, 
-    title TEXT    NOT NULL,
-    ects  INTEGER,
-    lang  TEXT,
-    semester TEXT,
-    hours  INTEGER,
-    friendly INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS teachers (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    name  TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS teaching (
-    course_id     INTEGER NOT NULL REFERENCES courses(id),
-    teacher_id    INTEGER NOT NULL REFERENCES teachers(id),
-    PRIMARY KEY (course_id, teacher_id)
-);
-
-CREATE TABLE IF NOT EXISTS prerequisites (
-    course_id        INTEGER NOT NULL REFERENCES courses(id),
-    prerequisite_id  INTEGER NOT NULL REFERENCES courses(id),
-    PRIMARY KEY (course_id, prerequisite_id)
-);
-
-CREATE TABLE IF NOT EXISTS option_courses (
-    option_id   INTEGER NOT NULL REFERENCES option(id),
-    course_id   INTEGER NOT NULL REFERENCES courses(id),
-    years  TEXT,
-    position    INTEGER NOT NULL,   -- preserves ordering within an option 
-    mandatory   INTEGER NOT NULL DEFAULT 0, -- 1 = mandatory
-    PRIMARY KEY (option_id, course_id)
-);
-
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT
-    user_name TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS saves (
-    id INTEGER PRIMARY KEY AUTOINCREMENT
-    user INTEGER NOT NULL REFERENCES users(id)
-    name TEXT NOT NULL
-    creation_time TEXT
-    last_save_time TEXT
-    content TEXT
-);
-
-"""
-
-
-def init_db(conn: sqlite3.Connection) -> None:
-    """Creates all tables. Safe to call multiple times (IF NOT EXISTS)."""
-    conn.executescript(SCHEMA)
-    conn.commit()
-    print("Schema initialised.")
 
 
 def is_seed_needed(cursor: sqlite3.Cursor, program_title: str) -> bool:
@@ -113,12 +34,10 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
         print(f"'{program['title']}' is up to date (seeded at {last}). Skipping.")
         return
 
-    seeded_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-
     try:
         cursor.execute(
-            "INSERT INTO programs (title, total_ects, last_seeded_at) VALUES (?, ?, ?)",
-            (program["title"], program["total_ects"], seeded_at),
+            "INSERT INTO programs (title, total_ects) VALUES (?, ?)",
+            (program["title"], program["total_ects"]),
         )
         program_id = cursor.lastrowid
 
@@ -126,7 +45,7 @@ def insert_programme(conn: sqlite3.Connection, program: dict) -> None:
             insert_option(cursor, option, program_id, position=position)
 
         conn.commit()
-        print(f"Seeded '{program['title']}' at {seeded_at}.")
+        print(f"Seeded '{program['title']}' successfully.")
 
     except Exception as e:
         conn.rollback()

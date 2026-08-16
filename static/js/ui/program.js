@@ -72,6 +72,8 @@ function makeProgramOption(label, palette, courses) {
 }
 
 // ── Grid view ──────────────────────────────────────────────────
+const ECTS_YEAR_LIMIT = 75;
+const ECTS_SEMESTER_SOFT_LIMIT = 30;
 
 function getEligibleZones(course) {
     const years = (!course.years || course.years === '12') ? ['1', '2'] : [course.years];
@@ -90,6 +92,46 @@ function zoneKey(zone) {
     return `${zone.year}-${zone.semester}`;
 }
 
+function getZoneECTSTotal(program_state, targetZoneKey, excludeCode = null) {
+    let total = 0;
+    program_state.selected_courses.forEach(code => {
+        if (code === excludeCode) return; // exclude the course currently being dragged
+        const course = program_state.courseData[code];
+        if (!course) return;
+
+        const { zones, pinned } = getEligibleZones(course);
+        const key = pinned
+            ? zoneKey(zones[0])
+            : (program_state.placements[code] ? zoneKey(program_state.placements[code]) : 'other');
+
+        if (key === targetZoneKey) total += course.ects;
+    });
+    return total;
+}
+
+function getYearECTSTotal(program_state, year, excludeCode = null) {
+    let total = 0;
+    program_state.selected_courses.forEach(code => {
+        if (code === excludeCode) return; // exclude the course currently being dragged
+        const course = program_state.courseData[code];
+        if (!course) return;
+
+        const { zones, pinned } = getEligibleZones(course);
+        const resolved = pinned
+            ? zones[0]
+            : program_state.placements[code];
+
+        if (resolved === resolved.year === year) total += course.ects;
+    });
+    return total;
+}
+
+function getLoadStatus(total, typical = ECTS_SEMESTER_SOFT_LIMIT, tolerance = 3) {
+    if (typical <= total && total <= typical + tolerance) return 'ok';       // exactly 30 -> green
+    if (total > typical + tolerance) return 'over';       // above 30 -> red
+    return 'under';                           // below 30 -> orange/yellow
+}
+
 function buildProgramGrid(program_state) {
     const container = document.getElementById('program-content');
 
@@ -106,6 +148,15 @@ function buildProgramGrid(program_state) {
           <div class="other-courses-header">Not yet placed</div>
           <div class="other-courses-grid" data-zone="other"></div>
         </div>`;
+
+    document.querySelectorAll(`.grid-col-courses[data-zone]`).forEach(col => {
+        const header = col.previousElementSibling;
+        const zone = col.dataset.zone
+        const total = getZoneECTSTotal(program_state, zone)
+        const status = getLoadStatus(total)
+        header.innerHTML = `M${zone[0]} — Q${zone[2]}
+        <span class="ects-total load-${status}">${total}</span>/${ECTS_SEMESTER_SOFT_LIMIT}`;
+    });
 
     Array.from(program_state.selected_courses)
         .map(code => program_state.courseData[code])
@@ -145,16 +196,25 @@ function buildProgramGrid(program_state) {
 }
 
 function attachDragHandlers(card, course, zones, program_state) {
-    const eligibleKeys = new Set(zones.map(zoneKey));
 
     card.addEventListener('pointerdown', (e) => {
         if (e.button !== undefined && e.button !== 0) return; // left click / primary touch only
+        const eligibleKeys = new Set(zones.map(zoneKey));
 
         const allZoneEls = document.querySelectorAll('[data-zone]');
         allZoneEls.forEach(z => {
-            z.classList.add(eligibleKeys.has(z.dataset.zone) ? 'zone-eligible' : 'zone-ineligible');
+            const key = z.dataset.zone;
+            if (!eligibleKeys.has(key)) {
+                z.classList.add('zone-ineligible'); // wrong year/semester entirely
+                return;
+            }
+            const currentTotal = getZoneECTSTotal(program_state, key, course.code);
+            if (currentTotal + course.ects > ECTS_YEAR_LIMIT) {
+                z.classList.add('zone-full');       // right period, but no room left
+            } else {
+                z.classList.add('zone-eligible');   // droppable
+            }
         });
-
         const rect = card.getBoundingClientRect();
         const ghost = card.cloneNode(true);
         ghost.classList.add('drag-ghost');
@@ -191,16 +251,21 @@ function attachDragHandlers(card, course, zones, program_state) {
             allZoneEls.forEach(z => z.classList.remove('zone-eligible', 'zone-ineligible', 'zone-hover'));
 
             const dropKey = hoveredZone && hoveredZone.dataset.zone;
+            const isRealZone = dropKey && eligibleKeys.has(dropKey);
 
-            if (dropKey && eligibleKeys.has(dropKey)) {
-                // valid drop on a real grid zone: persist it
-                const [year, semester] = dropKey.split('-');
-                program_state.placements[course.code] = { year, semester };
+            if (isRealZone) {
+                const [year] = dropKey.split('-')
+                const currentTotal = getYearECTSTotal(program_state, year, course.code);
+                const wouldExceed = currentTotal + course.ects > ECTS_YEAR_LIMIT;
+
+                if (!wouldExceed) {
+                    const [year, semester] = dropKey.split('-');
+                    program_state.placements[course.code] = { year, semester };
+                }
+                // else: over budget -> state untouched, card snaps back on re-render
             } else if (dropKey === 'other') {
-                // dropped back on the holding pen: explicitly unplace it
                 delete program_state.placements[course.code];
             }
-            // any other drop target (or none): state untouched, card snaps back
 
             buildProgramGrid(program_state);
         }
@@ -209,6 +274,9 @@ function attachDragHandlers(card, course, zones, program_state) {
         document.addEventListener('pointerup', onUp);
     });
 }
+
+
+// ── Stats view ──────────────────────────────────────────────────
 
 function buildProgramStats(program_state, useEcts = false) {
     const container = document.getElementById('program-content');

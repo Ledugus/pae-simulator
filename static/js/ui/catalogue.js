@@ -163,7 +163,7 @@ function wireSearch() {
     const clear = document.getElementById('search-clear');
 
     input.addEventListener('input', () => {
-        if (state.current_program_id !== null) {
+        if (program_state.current_program_id !== null) {
             getProgramState(state.current_program_id).searchQuery = input.value;
         }
         clear.style.display = input.value ? 'block' : 'none';
@@ -172,7 +172,7 @@ function wireSearch() {
 
     clear.addEventListener('click', () => {
         input.value = '';
-        if (state.current_program_id !== null) {
+        if (program_state.current_program_id !== null) {
             getProgramState(state.current_program_id).searchQuery = '';
         }
         clear.style.display = 'none';

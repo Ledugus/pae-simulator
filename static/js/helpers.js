@@ -15,6 +15,38 @@ function populateState(program_state, program_data) {
     program_state.total_ects = program_data.total_ects;
     program_state.optionData = {};
 
+    program_state.optionData[0] = {
+        id: 0,
+        description: "L'étudiant peut choisir sa mobilité internationale. Attention aux conditions d'admission aux programmes proposés, renseignez vous sur le site officiel de votre faculté.",
+        html_id: "mobility",
+        group_label: null,
+        label: "Mobilité internationale [30.0]",
+        courses: [
+            {
+                code: "ERASMUS",
+                mandatory: false,
+                position: 1,
+            }
+        ],
+        min_ects: 0,
+        palette: OPTION_COLORS[0]
+
+
+    }
+    program_state.courseData["ERASMUS"] = {
+        code: "ERASMUS",
+        ects: 30,
+        friendly: true,
+        id: 0,
+        lang: '',
+        hours: 0,
+        semester: "12",
+        years: "12",
+        teachers: [],
+        title: "Programme d'échange Erasmus pendant 1 quadrimestre"
+    }
+    program_state.courseOptions["ERASMUS"] = [0]
+
     program_data.options.forEach((opt, i) => {
         const palette = opt.html_id.includes('tronc_commun')
             ? OPTION_COLORS[0]

@@ -20,6 +20,8 @@ async function init() {
         wireFilters();
         wireSearch();
         wireViewSwitcher();
+        wireSaveBtn();
+        wireLoadSaves();
         setLoadingState('ready');
     } catch (error) {
         setLoadingState('error', error.message);
@@ -63,6 +65,17 @@ function buildProgramSelector(allPrograms) {
         container.appendChild(opt);
     });
 }
+
+function setSelectedProgram(programId) {
+    const select = document.getElementById('program-selector');
+    select.value = programId;
+
+    if (programId != 0) {
+        const defaultOpt = document.getElementById('program-selector-default-option');
+        if (defaultOpt) defaultOpt.remove();
+    }
+}
+
 
 /** Event handler for program-selector, specified in index.html */
 function programEventHandler(event) {
@@ -109,7 +122,6 @@ function buildPageOfProgram(program_state) {
 /** Reconciles the DOM with the current selection state. 
   * Called after every toggle.*/
 function updateAll(program_state) {
-
     // Sync course row checkboxes
     document.querySelectorAll('.course-row').forEach(row => {
         const sel = program_state.selected_courses.has(row.dataset.code);

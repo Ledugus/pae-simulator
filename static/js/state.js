@@ -10,6 +10,7 @@ const state = {
     programs: new Map(),
     current_program_id: null,
     allPrograms: null,
+    user_id: 1,
 };
 
 /**
@@ -32,6 +33,7 @@ function getProgramState(program_id) {
             selected_courses: new Set(),
             selected_options: new Set(),
             placements: {},
+            save_id: null,
             activeFilter: 'all',
             searchQuery: '',
             activeView: 'list',

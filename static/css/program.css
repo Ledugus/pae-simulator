@@ -165,8 +165,15 @@
   outline: 2px dashed #4caf50;
   outline-offset: -2px;
 }
+
 .zone-ineligible {
   opacity: 0.35;
+}
+
+.zone-full {
+  outline: 2px dashed #e0a030; /* amber, distinct from green (eligible) / dim (ineligible) */
+  outline-offset: -2px;
+  opacity: 0.6;
 }
 .zone-hover {
   background: rgba(76, 175, 80, 0.15);
@@ -251,3 +258,11 @@
   opacity: 0.9;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
+
+
+.ects-total {
+  font-family: 'DM Mono', monospace; /* optional, matches your other mono labels */
+}
+.ects-total.load-ok   { color: #3dd68c; }  /* green - exactly typical load */
+.ects-total.load-over { color: #f05050; }  /* red - exceeds typical load */
+.ects-total.load-under{ color: #f0a050; }  /* orange - under typical load */
