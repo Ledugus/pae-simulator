@@ -17,6 +17,8 @@
   --red: #f05050;
   --red-dim: #3a1010;
   --yellow: #f0d050;
+  --ects-scale: 0.9rem; /* height representing 1 ECTS point — the ONE knob you tune */
+  --period-budget: 30;  /* ECTS considered "full" for one period */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

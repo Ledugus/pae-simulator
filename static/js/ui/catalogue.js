@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // js/ui/catalogue.js
 // Left panel: course catalogue, filters, search.
-// Depends on: config.js, state.js, helpers.js, selection.js, ui/tooltip.js
+// Depends on: ui-config.js, state.js, helpers.js, selection.js, ui/tooltip.js
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';

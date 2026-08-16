@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // js/helpers.js
 // Pure data helpers. Read state, return values. No DOM access.
-// Depends on: config.js, state.js
+// Depends on: ui-config.js, state.js
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';

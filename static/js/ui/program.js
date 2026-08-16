@@ -73,6 +73,23 @@ function makeProgramOption(label, palette, courses) {
 
 // ── Grid view ──────────────────────────────────────────────────
 
+function getEligibleZones(course) {
+    const years = (!course.years || course.years === '12') ? ['1', '2'] : [course.years];
+    const semesters = (!course.semester || course.semester === '12') ? ['1', '2'] : [course.semester];
+
+    const zones = [];
+    years.forEach(y => semesters.forEach(s => zones.push({ year: y, semester: s })));
+
+    return {
+        zones,                       // all legal grid zones for this course
+        pinned: zones.length === 1   // exactly one legal zone => fixed, non-draggable
+    };
+}
+
+function zoneKey(zone) {
+    return `${zone.year}-${zone.semester}`;
+}
+
 function buildProgramGrid(program_state) {
     const container = document.getElementById('program-content');
 
@@ -81,45 +98,116 @@ function buildProgramGrid(program_state) {
             ${[1, 2].map(year => [1, 2].map(sem => `
                 <div class="grid-col">
                     <div class="grid-col-header">M${year} — Q${sem}</div>
-                    <div class="grid-col-courses" data-year="${year}" data-semester="${sem}"></div>
+                    <div class="grid-col-courses" data-zone="${year}-${sem}"></div>
                 </div>
             `).join('')).join('')}
         </div>
-        <div class="other-courses-grid"></div>`;
+        <div class="other-courses-wrap">
+          <div class="other-courses-header">Not yet placed</div>
+          <div class="other-courses-grid" data-zone="other"></div>
+        </div>`;
 
     Array.from(program_state.selected_courses)
         .map(code => program_state.courseData[code])
         .filter(Boolean)
-        .forEach(c => {
-            const palette = getCourseColorPalette(program_state, c.code);
+        .forEach(course => {
+            const { zones, pinned } = getEligibleZones(course);
+            let targetKey;
+            if (pinned) {
+                targetKey = zoneKey(zones[0]);
+            } else {
+                const placed = program_state.placements[course.code];
+                targetKey = placed ? zoneKey(placed) : 'other';
+            }
+            const target = container.querySelector(`[data-zone="${targetKey}"]`);
+            if (!target) return;
+
+            const palette = getCourseColorPalette(program_state, course.code);
 
             const card = document.createElement('div');
-            card.className = 'course-card';
+            card.className = pinned ? 'course-card pinned' : 'course-card';
+            card.style.setProperty('--ects', course.ects);
             card.style.setProperty('--card-bg', palette.bg);
             card.style.setProperty('--card-border', palette.primary);
             card.style.setProperty('--card-text-dark', palette.dark);
+            card.style.setProperty('--card-text-mid', palette.mid);
             card.style.setProperty('--card-badge-bg', palette.badge);
             card.innerHTML = `
-                <div class="course-card-title">${c.title}</div>
-                <div class="course-card-code">${c.code}</div>
-                <div class="course-card-footer">
-                    <span class="course-card-lang">${c.lang || ''}</span>
-                    <span class="course-card-ects">${c.ects} ECTS</span>
-                </div>`;
-
-            let grid;
-            if (!c.years || c.years === "12") {
-                grid = container.querySelector('.other-courses-grid');
-            } else if (!c.semester || c.semester === "12") {
-                // Both semesters — place in Q1 column for that year
-                grid = container.querySelector(
-                    `.grid-col-courses[data-year="${c.years}"][data-semester="1"]`);
-            } else {
-                grid = container.querySelector(
-                    `.grid-col-courses[data-year="${c.years}"][data-semester="${c.semester}"]`);
-            }
-            if (grid) grid.appendChild(card);
+                <div class="course-card-toprow">
+                    <span class="course-card-code">${course.code}</span>
+                    <span class="course-card-lang">${course.lang || ''}</span>
+                    <span class="course-card-ects">${course.ects} ECTS</span>
+                </div>
+                <div class="course-card-title">${course.title}</div>`;
+            if (!pinned) attachDragHandlers(card, course, zones, program_state);
+            target.appendChild(card);
         });
+}
+
+function attachDragHandlers(card, course, zones, program_state) {
+    const eligibleKeys = new Set(zones.map(zoneKey));
+
+    card.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return; // left click / primary touch only
+
+        const allZoneEls = document.querySelectorAll('[data-zone]');
+        allZoneEls.forEach(z => {
+            z.classList.add(eligibleKeys.has(z.dataset.zone) ? 'zone-eligible' : 'zone-ineligible');
+        });
+
+        const rect = card.getBoundingClientRect();
+        const ghost = card.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width = rect.width + 'px';
+        ghost.style.left = rect.left + 'px';
+        ghost.style.top = rect.top + 'px';
+        document.body.appendChild(ghost);
+        card.classList.add('dragging-source');
+
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        let hoveredZone = null;
+
+        function onMove(ev) {
+            ghost.style.left = (ev.clientX - offsetX) + 'px';
+            ghost.style.top = (ev.clientY - offsetY) + 'px';
+
+            ghost.style.display = 'none'; // exclude ghost from its own hit-test
+            const under = document.elementFromPoint(ev.clientX, ev.clientY);
+            ghost.style.display = '';
+            const zone = under && under.closest('[data-zone]');
+
+            if (zone !== hoveredZone) {
+                if (hoveredZone) hoveredZone.classList.remove('zone-hover');
+                hoveredZone = zone;
+                if (hoveredZone) hoveredZone.classList.add('zone-hover');
+            }
+        }
+
+        function onUp() {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            ghost.remove();
+            allZoneEls.forEach(z => z.classList.remove('zone-eligible', 'zone-ineligible', 'zone-hover'));
+
+            const dropKey = hoveredZone && hoveredZone.dataset.zone;
+
+            if (dropKey && eligibleKeys.has(dropKey)) {
+                // valid drop on a real grid zone: persist it
+                const [year, semester] = dropKey.split('-');
+                program_state.placements[course.code] = { year, semester };
+            } else if (dropKey === 'other') {
+                // dropped back on the holding pen: explicitly unplace it
+                delete program_state.placements[course.code];
+            }
+            // any other drop target (or none): state untouched, card snaps back
+
+            buildProgramGrid(program_state);
+        }
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+    });
 }
 
 function buildProgramStats(program_state, useEcts = false) {

@@ -31,6 +31,7 @@ function getProgramState(program_id) {
             // user state — persists when switching programs
             selected_courses: new Set(),
             selected_options: new Set(),
+            placements: {},
             activeFilter: 'all',
             searchQuery: '',
             activeView: 'list',
