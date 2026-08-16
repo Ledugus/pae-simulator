@@ -8,8 +8,6 @@ Outil de composition et simulation de PAE (Programme Annuel Etudiant) orienté p
 Choississez un programme de Master parmi ceux proposés dans l'onglets "Programmes". Composez ensuite votre PAE en ajoutant les cours qui vous plaisent jusqu'à atteindre le nombre de crédits suffisants. Le composeur vous donnera alors l'intitulé du diplôme ainsi que l'orientation générale du programme constitué.
 
 ## TODO:
-Database :
-- Possibilité de sauvegarder les données
 
 Scraping : 
 - Scrape prérequis
@@ -17,11 +15,9 @@ Scraping :
 
 Logique de validation : 
 - règle de prérequis
-- 30 crédits d'Erasmus à placer pdt un quadri
 
 UI : 
 - Panels ajustables
-- Arrangement des cours choisis selon le quadri, drag & drop des cours dans le slot voulu
 - Ajouter un widget de prévisualisation de l'horaire
 
 Collab : 
