@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, time, timezone, timedelta
 
 
 def get_db():
@@ -130,6 +131,29 @@ def build_program(program_row, option_rows, course_rows, teachers_rows) -> dict:
         "options": options,  # list of options, each with a courses list
         "teachers": teachers,
     }
+
+
+def save_program(user_id, save_name, program_data, save_id=None):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    time_string = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+    if save_id:
+
+        # change the content and the name of the save,
+        # set new last_save_time
+        return save_id
+    try:
+        cursor.execute(
+            "INSERT INTO saves (user, name, creation_time, last_save_time, content) VALUES (?, ?, ?)",
+            (user_id, save_name, time_string, time_string, program_data),
+        )
+        save_id = cursor.lastrowid
+        return save_id
+
+    except Exception as e:
+        conn.rollback()
+        raise e
 
 
 def test_db():

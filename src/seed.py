@@ -60,6 +60,20 @@ CREATE TABLE IF NOT EXISTS option_courses (
     PRIMARY KEY (option_id, course_id)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+    user_name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS saves (
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+    user INTEGER NOT NULL REFERENCES users(id)
+    name TEXT NOT NULL
+    creation_time TEXT
+    last_save_time TEXT
+    content TEXT
+);
+
 """
 
 
