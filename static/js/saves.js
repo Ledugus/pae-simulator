@@ -4,7 +4,7 @@ function wireSaveBtn() {
 
         const title = document.getElementById("saveTitleInput").value.trim();
         if (!title) {
-            alert("Please give your save a title.");
+            showToast("Please give your save a title.");
             return;
         }
         const myObject = {
@@ -67,7 +67,7 @@ function wireLoadSaves() {
         const select = document.getElementById("loadSaveSelect");
         const saveId = select.value;
         if (!saveId) {
-            alert("Please select a save to load.");
+            showToast("Please select a save to load.");
             return;
         }
         try {
@@ -81,7 +81,7 @@ function wireLoadSaves() {
         const select = document.getElementById("loadSaveSelect");
         const saveId = select.value;
         if (!saveId) {
-            alert("Please select a save to delete.");
+            showToast("Please select a save to delete.");
             return;
         }
         if (!confirm("Delete this save? This can't be undone.")) return;

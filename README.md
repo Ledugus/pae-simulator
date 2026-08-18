@@ -1,29 +1,23 @@
 # PAElla - Composeur de PAE
 
-Outil de composition et simulation de PAE (Programme Annuel Etudiant) orienté pour les étudiants en Master à l'EPL, UCLouvain.
+Outil de composition de PAE (Programme Annuel Etudiant) orienté pour les étudiants en Master à l'EPL, UCLouvain.
 
+
+## Disclaimer
+Cet outil n'est pas officiel de l'UCLouvain, certaines conditions et critères peuvent ne pas être repris. Vérifiez toujours les informations sur le site officiel de votre faculté.
 
 ## Description
 
-Choississez un programme de Master parmi ceux proposés dans l'onglets "Programmes". Composez ensuite votre PAE en ajoutant les cours qui vous plaisent jusqu'à atteindre le nombre de crédits suffisants. Le composeur vous donnera alors l'intitulé du diplôme ainsi que l'orientation générale du programme constitué.
+Choississez un programme de Master parmi ceux proposés dans l'onglets "Programmes". Composez ensuite votre PAE en ajoutant les cours qui vous plaisent jusqu'à atteindre le nombre de crédits suffisants. 
 
-## TODO:
+![Exemple de programme sur PAElla](docs/images/demo.png)
 
-Scraping : 
-- Scrape prérequis
-- Scrape API de l'horaire
+## Autres fonctionnalités
+- Moteur de recherche et filtres sur le catalogue de cours
+- Agencement par quadrimestre des cours dans l'onglet "grid".
+- Visualisation des quelques statistiques sur votre programme (profs) dans l'onglet "stats"
+- Possibilité de sauvegarder votre progression.
 
-Logique de validation : 
-- règle de prérequis
-
-UI : 
-- Panels ajustables
-- Ajouter un widget de prévisualisation de l'horaire
-
-Collab : 
-- Faire la repo github
-- Envoyer un message sur le discord d'update
-- README propre
 
 ## Setup
 Pour lancer l'app en local : 
@@ -36,6 +30,19 @@ python3 src/seed.py # Setup the database
 fastapi dev
 ```
 
-
 ## Contribuer
 Le projet est tout nouveau, n'hésitez pas à proposer des améliorations ou du feedback via une *issue* ou à contribuer à une fonctionnalité avec une *pull-request*.
+
+## TODO:
+- Meilleure recherche et filtrage pour naviguer dans le catalogue
+
+Scraping : 
+- Scrape prérequis
+- Scrape API de l'horaire
+
+Logique de validation : 
+- règle de prérequis
+
+UI : 
+- Panels ajustables
+- Ajouter un widget de prévisualisation de l'horaire
